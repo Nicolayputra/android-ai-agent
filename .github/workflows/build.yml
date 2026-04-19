@@ -1,18 +1,86 @@
 name: Build Android APK
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Build with Buildozer
-        uses: ArtemSerebriakov/buildozer-action@v1
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          workdir: mobile_app
-          buildozer_version: master
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            git \
+            python3-dev \
+            ffmpeg \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libportmidi-dev \
+            libswscale-dev \
+            libavformat-dev \
+            libavcodec-dev \
+            zlib1g-dev \
+            libgstreamer1.0-dev \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            libsqlite3-dev \
+            sqlite3 \
+            bzip2 \
+            libbz2-dev \
+            libssl-dev \
+            openssl \
+            libffi-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libreadline-dev \
+            tk-dev \
+            libgdbm-dev \
+            libdb5.3-dev \
+            libexpat1-dev \
+            liblzma-dev \
+            libffi-dev \
+            wget \
+            unzip \
+            zip \
+            autoconf \
+            libtool \
+            pkg-config \
+            libncurses5 \
+            libncursesw5 \
+            libtinfo5 \
+            cmake \
+            libstdc++6 \
+            libgcc1 \
+            zlib1g \
+            libncurses5 \
+            libtinfo5 \
+            libstdc++6 \
+            abi-compliance-checker \
+            libgl1-mesa-dev \
+            libgles2-mesa-dev
+          
+      - name: Install Buildozer
+        run: |
+          pip install --upgrade buildozer cython
+          
+      - name: Build with Buildozer
+        run: |
+          cd mobile_app
+          buildozer android debug
+        env:
+          ACCEPT_SDK_LICENSE: "yes"
+
       - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: SovereignCore_APK
           path: mobile_app/bin/*.apk
