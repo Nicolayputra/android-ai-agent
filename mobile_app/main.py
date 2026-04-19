@@ -102,10 +102,22 @@ class SovereignCore(App):
                 "Authorization": f"Bearer {API_KEY}",
                 "Content-Type": "application/json"
             }
+            # Get system stats for v9.0
+            try:
+                import psutil
+                cpu = psutil.cpu_percent()
+                ram = psutil.virtual_memory().percent
+            except:
+                cpu, ram = 15, 45 # Default mock for v9.0
+
             r = requests.post(
                 f"{GATEWAY_URL}/agent/register",
                 headers=headers,
-                json={"device_id": DEVICE_ID, "agent": "Noir SMC v7.5"},
+                json={
+                    "device_id": DEVICE_ID, 
+                    "agent": "Noir SMC v9.0 Elite",
+                    "stats": {"cpu": cpu, "ram": ram}
+                },
                 timeout=15
             )
             if r.status_code == 200:
@@ -218,6 +230,14 @@ class SovereignCore(App):
                     result = {"success": True, "output": f"Screenshot uploaded: {key}"}
                 else:
                     result = {"success": False, "error": f"Upload failed: {r.status_code}"}
+
+            elif atype == "ui_dump":
+                path = os.path.join(App.get_running_app().user_data_dir, "view_hierarchy.xml")
+                os.system(f"uiautomator dump {path}")
+                time.sleep(1.0)
+                with open(path, 'r', encoding='utf-8') as f:
+                    xml_content = f.read()
+                result = {"success": True, "output": xml_content}
 
             elif atype == "ping":
                 result = {"success": True, "output": f"PONG from {DEVICE_ID}"}

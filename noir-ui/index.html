@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noir Sovereign Dashboard v7.5</title>
+    <title>Noir Sovereign Omni v9.0 ELITE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&family=Fira+Code:wght@400;500&display=swap');
         
@@ -33,11 +33,16 @@
 
         .dashboard {
             display: grid;
-            grid-template-rows: 60px 1fr 180px;
+            grid-template-rows: 60px 1fr 200px;
             height: 100vh;
             padding: 10px;
             gap: 10px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* SOVEREIGN STEALTH MODE */
+        .stealth-mode main, .stealth-mode footer { opacity: 0; pointer-events: none; transform: scale(0.95); }
+        .stealth-mode header { border-bottom-color: transparent; }
 
         .glass {
             background: var(--panel);
@@ -45,6 +50,7 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            transition: transform 0.5s, opacity 0.5s;
         }
 
         header {
@@ -53,6 +59,7 @@
             justify-content: space-between;
             padding: 0 20px;
             border-bottom: 2px solid var(--neon);
+            z-index: 100;
         }
 
         .brand {
@@ -66,193 +73,192 @@
 
         .status-bar { display: flex; gap: 20px; }
         .status-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; }
-        .orb { width: 10px; height: 10px; border-radius: 50%; background: #333; box-shadow: inset 0 0 5px #000; }
+        .orb { width: 10px; height: 10px; border-radius: 50%; background: #333; }
         .orb.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
         .orb.error { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
 
-        /* Main Content Grid */
         main {
             display: grid;
-            grid-template-columns: 350px 1fr 350px;
+            grid-template-columns: 320px 1fr 320px;
             gap: 10px;
             overflow: hidden;
+            transition: 0.5s;
         }
 
         .column-header {
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--gold);
-            padding: 15px;
+            padding: 12px;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between;
         }
 
-        /* Left Column: System Notice & Missions */
-        .left-panel { display: flex; flex-direction: column; gap: 10px; }
-        .notice-box {
-            padding: 15px;
-            background: rgba(255, 60, 60, 0.05);
-            border-left: 3px solid var(--danger);
-            font-size: 0.85rem;
-            line-height: 1.4;
-        }
-
-        /* Center Column: Chat & Control */
-        .center-panel { display: flex; flex-direction: column; }
-        .chat-container {
+        /* PANELS */
+        .interface-panel { display: flex; flex-direction: column; }
+        .chat-display {
             flex: 1;
-            padding: 15px;
+            padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
             font-family: 'Fira Code', monospace;
             font-size: 0.85rem;
         }
-        .msg { padding: 10px; border-radius: 8px; max-width: 85%; position: relative; }
-        .msg-ai { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border); align-self: flex-start; }
-        .msg-user { background: rgba(255, 179, 0, 0.05); border: 1px solid rgba(255, 179, 0, 0.2); align-self: flex-end; color: var(--gold); }
-        
-        .chat-input-area {
-            padding: 15px;
+        .msg { padding: 12px; border-radius: 8px; max-width: 85%; border-left: 2px solid transparent; }
+        .msg-ai { background: rgba(0, 242, 255, 0.05); border-color: var(--border); align-self: flex-start; }
+        .msg-user { background: rgba(255, 179, 0, 0.05); border-color: rgba(255, 179, 0, 0.2); align-self: flex-end; color: var(--gold); }
+        .msg-bridge { background: rgba(0, 255, 163, 0.05); border-color: var(--success); align-self: flex-start; font-size: 0.7rem; color: var(--success); }
+
+        .input-bar {
+            padding: 20px;
             border-top: 1px solid var(--border);
             display: flex;
             gap: 10px;
         }
-        input {
+        input[type="text"] {
             flex: 1;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.4);
             border: 1px solid var(--border);
             padding: 12px;
             color: #fff;
-            border-radius: 6px;
+            border-radius: 4px;
             outline: none;
             font-family: 'Rajdhani', sans-serif;
-            font-size: 1rem;
         }
-        input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
-        .btn-send {
-            padding: 0 25px;
+        .btn-action {
             background: var(--neon);
             color: #000;
             border: none;
-            border-radius: 6px;
+            padding: 0 20px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
             font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-send:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--neon); }
-
-        /* Right Column: Mission Logs */
-        .right-panel { display: flex; flex-direction: column; }
-        .log-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .log-item { font-size: 0.75rem; color: #aaa; border-left: 2px solid #333; padding-left: 10px; }
-
-        /* Footer: Real-time Terminal */
-        footer { padding: 15px; font-family: 'Fira Code', monospace; font-size: 0.75rem; color: #666; overflow: hidden; }
-        
-        .mission-btn {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
             font-size: 0.7rem;
-            font-weight: 700;
-            transition: 0.2s;
         }
-        .mission-btn:hover { background: var(--border); color: var(--neon); }
 
-        /* Animations */
-        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
-        .scanning { animation: pulse 1s infinite alternate; }
+        /* WHATSAPP BRIDGE PANEL */
+        .bridge-notif {
+            position: fixed;
+            bottom: 220px;
+            right: 20px;
+            width: 280px;
+            padding: 15px;
+            font-size: 0.7rem;
+            border-right: 4px solid var(--success);
+            display: none;
+        }
+
+        /* PERMISSION GATE */
+        #permission-gate {
+            position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 420px;
+            padding: 30px;
+            display: none;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
+<div id="permission-gate" class="glass">
+    <div style="color:var(--danger); font-family: 'Orbitron'; margin-bottom: 10px; text-align: center;">🛡️ SOVEREIGN HANDSHAKE REQUIRED</div>
+    <div id="perm-desc" style="font-size: 0.8rem; margin-bottom: 25px; line-height: 1.4;"></div>
+    <div style="display: flex; justify-content: center; gap: 20px;">
+        <button class="btn-action" style="background:var(--success)" onclick="resolvePerm(true)">GRANT ACCESS</button>
+        <button class="btn-action" style="background:var(--danger); color:#fff" onclick="resolvePerm(false)">TERMINATE</button>
+    </div>
+</div>
+
+<div class="dashboard" id="main-ui">
     <header class="glass">
-        <div class="brand">NOIR SOVEREIGN COMMAND <span style="font-size: 0.6rem; color: var(--gold)">v7.5 MASTER</span></div>
+        <div class="brand">NOIR SOVEREIGN OMNI <span style="color:var(--gold)">v9.0 ELITE</span></div>
         <div class="status-bar">
-            <div class="status-item"><div id="orb-mobile" class="orb"></div> REDMI N14</div>
+            <div class="status-item"><div id="orb-agent" class="orb"></div> MOBILE</div>
             <div class="status-item"><div id="orb-pc" class="orb"></div> PC REMOTE</div>
-            <div class="status-item"><div id="orb-gateway" class="orb online"></div> GATEWAY</div>
+            <div class="status-item"><div id="orb-wa" class="orb online"></div> WA-BRIDGE</div>
+            <button class="btn-action" style="background:transparent; color:var(--neon); border:1px solid var(--neon)" onclick="toggleStealth()">STEALTH MODE</button>
         </div>
     </header>
 
-    <main>
-        <!-- LEFT: SYSTEM & QUICK ACTIONS -->
-        <section class="left-panel">
-            <div class="glass" style="flex: 1">
-                <div class="column-header">SYSTEM ARCHITECTURE</div>
-                <div class="notice-box">
-                    <b style="color:var(--danger)">⚠️ COMPATIBILITY NOTICE:</b><br>
-                    SMC v7.2 terdeteksi menggunakan API Level 33. Pada Redmi Note 14 (Android 14), sistem mungkin menampilkan peringatan "Aplikasi untuk versi lama".<br>
-                    <i style="color:var(--gold)">Status: Polling Port 80 Active.</i>
+    <main id="content-area">
+        <section class="glass" style="display: flex; flex-direction: column;">
+            <div class="column-header">SYSTEM ARCHITECTURE (v9.0)</div>
+            <div style="padding: 20px; flex: 1">
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 0.6rem; color:#555">CPU USAGE</div>
+                    <div style="height: 4px; background: #111; margin-top: 5px; position: relative;">
+                        <div id="bar-cpu" style="width: 34%; height: 100%; background: var(--neon); box-shadow: 0 0 10px var(--neon);"></div>
+                    </div>
                 </div>
-                <div style="padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="mission-btn" onclick="sendCmd('screenshot')">📸 SCREENSHOT</div>
-                    <div class="mission-btn" onclick="sendCmd('battery')">🔋 BATTERY</div>
-                    <div class="mission-btn" onclick="sendCmd('shell', 'uptime')">⚡ UPTIME</div>
-                    <div class="mission-btn" onclick="sendCmd('shell', 'pm list packages')">📦 APPS</div>
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 0.6rem; color:#555">RAM AVAILABLE</div>
+                    <div style="height: 4px; background: #111; margin-top: 5px; position: relative;">
+                        <div id="bar-ram" style="width: 62%; height: 100%; background: var(--gold); box-shadow: 0 0 10px var(--gold);"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 30px; font-size: 0.65rem; color: var(--success); font-family: 'Fira Code'">
+                    > WA_BRIDGE: ACTIVE<br>
+                    > REMOTE_PC_LINK: READY<br>
+                    > AES_256_E2EE: ENABLED
                 </div>
             </div>
-            <div class="glass" style="height: 150px; padding: 15px;">
-                <div style="color:var(--danger); font-size: 0.7rem; font-weight: 700; margin-bottom: 10px;">🛡️ SECURITY OVERRIDE</div>
-                <button class="btn-send" style="width: 100%; height: 40px; background: var(--danger); font-size: 0.7rem" onclick="triggerKill()">GLOBAL KILL-SWITCH</button>
+            <div class="column-header" style="border-top: 1px solid var(--border)">WHATSAPP REMOTE CONTROL</div>
+            <div style="padding: 15px;">
+                <button class="btn-action" style="width: 100%; height: 40px;" onclick="addMsg('Tutorial: Kirim WA ke HP dengan format: \n/noir <perintah pc>\nContoh: /noir buka chrome', 'ai')">VIEW WA-BRIDGE DOCS</button>
             </div>
         </section>
 
-        <!-- CENTER: NEURAL CHAT (REDMI CONTROL) -->
-        <section class="center-panel glass">
-            <div class="column-header">
-                NEURAL COMMAND CHAT
-                <span id="typing-status" style="font-size: 0.6rem; color: var(--success); display:none" class="scanning">AGENT THINKING...</span>
-            </div>
-            <div class="chat-container" id="chat-box">
-                <div class="msg msg-ai">System Initialized. Sovereign Authority confirmed. Menunggu perintah untuk Redmi Note 14...</div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="Ketik perintah (e.g. 'cek memori', 'buka kamera', 'shell ls /sdcard')..." onkeypress="if(event.key==='Enter') transmit()">
-                <button class="btn-send" onclick="transmit()">TRANSMIT</button>
+        <section class="interface-panel glass">
+            <div class="column-header">NEURAL CORE INTERFACE</div>
+            <div class="chat-display" id="chat-box"></div>
+            <div class="input-bar">
+                <input type="text" id="chat-input" placeholder="Perintah otonom..." onkeypress="if(event.key==='Enter') transmit()">
+                <button class="btn-action" onclick="transmit()">TRANSMIT</button>
             </div>
         </section>
 
-        <!-- RIGHT: MISSION LOGS -->
-        <section class="right-panel glass">
-            <div class="column-header">REAL-TIME MISSION LOGS</div>
-            <div class="log-container" id="log-box">
-                <div class="log-item">[09:45:00] Initializing secure handshake...</div>
-            </div>
+        <section class="glass" style="display: flex; flex-direction: column;">
+            <div class="column-header">MISSION HISTORI & LOGS</div>
+            <div id="log-box" style="flex: 1; padding: 15px; overflow-y: auto; font-size: 0.7rem; color: #666; display: flex; flex-direction: column; gap: 10px;"></div>
         </section>
     </main>
 
     <footer class="glass">
-        <div id="console-out" style="height: 100%; overflow-y: auto;">
-            > Initializing Noir Terminal...<br>
-            > Dashboard Proxy v7.5 active on port 80.<br>
-            > Waiting for device registration signal...
+        <div class="column-header">LOOT VAULT & ASSETS</div>
+        <div id="media-list" style="display: flex; gap: 15px; padding: 15px; overflow-x: auto;">
+            <div style="min-width: 200px; height: 120px; background: #000; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">NO_MEDIA_SYNCED</div>
         </div>
     </footer>
 </div>
 
+<div id="wa-notif" class="glass bridge-notif">
+    <div style="color:var(--success); font-weight: 700; margin-bottom: 5px;">📥 INCOMING WA-BRIDGE</div>
+    <div id="wa-text" style="font-family: 'Fira Code'">...</div>
+</div>
+
 <script>
-    const GATEWAY_PROXY = "/api";
-    
-    function log(msg, color="#aaa") {
+    const API = "/api";
+    let isStealth = false;
+
+    function toggleStealth() {
+        isStealth = !isStealth;
+        document.getElementById('main-ui').classList.toggle('stealth-mode');
+        log(isStealth ? "Stealth Mode Enabled" : "Stealth Mode Disabled", isStealth ? "var(--danger)" : "var(--success)");
+    }
+
+    function log(msg, color="#666") {
         const box = document.getElementById('log-box');
         const item = document.createElement('div');
-        item.className = 'log-item';
         item.style.color = color;
-        item.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        item.innerHTML = `[${new Date().toLocaleTimeString().split(' ')[0]}] ${msg}`;
         box.prepend(item);
     }
 
-    function addChat(text, type='ai') {
+    function addMsg(text, type) {
         const box = document.getElementById('chat-box');
         const div = document.createElement('div');
         div.className = `msg msg-${type}`;
@@ -265,70 +271,39 @@
         const input = document.getElementById('chat-input');
         const val = input.value.trim();
         if(!val) return;
-
-        addChat(val, 'user');
+        addMsg(val, 'user');
         input.value = '';
-        document.getElementById('typing-status').style.display = 'block';
-
-        try {
-            // Analisis perintah secara cerdas
-            let action = { type: 'shell', cmd: val };
-            if(val.toLowerCase().includes('screenshot')) action = { type: 'screenshot' };
-            if(val.toLowerCase().includes('battery')) action = { type: 'battery' };
-            
-            const r = await fetch(`${GATEWAY_PROXY}/command`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action: action, description: `Chat: ${val}` })
-            });
-            const d = await r.json();
-            
-            setTimeout(() => {
-                document.getElementById('typing-status').style.display = 'none';
-                addChat(`Command Queued: ID ${d.command_id || d.id}. Menunggu eksekusi dari Redmi Note 14...`, 'ai');
-                log(`Mission Dispatched: ${val.toUpperCase()}`, 'var(--neon)');
-            }, 800);
-
-        } catch(e) {
-            addChat(`Error: Gagal terhubung ke Gateway. Pastikan proxy aktif.`, 'ai');
-            log(`Connection Error: ${e}`, 'var(--danger)');
-        }
-    }
-
-    async function sendCmd(type, cmd='') {
-        log(`Executing Quick Action: ${type.toUpperCase()}`);
-        await fetch(`${GATEWAY_PROXY}/command`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ action: { type: type, cmd: cmd }, description: `Quick: ${type}` })
+        const r = await fetch(`${API}/command`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: { type: 'shell', cmd: val }, description: val })
         });
+        const d = await r.json();
+        addMsg(`Executing: ${d.command_id || d.id}`, 'ai');
     }
 
     async function updateStatus() {
         try {
-            const r = await fetch(`${GATEWAY_PROXY}/status`);
+            const r = await fetch(`${API}/status`);
             const d = await r.json();
-            document.getElementById('orb-mobile').className = `orb ${d.agent ? 'online' : 'error'}`;
-            if(!d.agent) {
-                // Tampilkan warning jika offline
-                if(Math.random() > 0.9) log("⚠️ Awaiting Mobile Agent signal...", "var(--gold)");
+            document.getElementById('orb-agent').className = `orb ${d.agent ? 'online' : 'error'}`;
+            document.getElementById('orb-pc').className = `orb ${d.pc ? 'online' : 'error'}`;
+            
+            if(d.permission_needed) {
+                document.getElementById('perm-desc').innerText = d.permission_desc;
+                document.getElementById('permission-gate').style.display = 'block';
+            }
+
+            if(d.last_wa) {
+                const notif = document.getElementById('wa-notif');
+                document.getElementById('wa-text').innerText = d.last_wa;
+                notif.style.display = 'block';
+                setTimeout(() => notif.style.display = 'none', 5000);
+                addMsg(`[WA BRIDGE] Perintah dari HP ke PC: ${d.last_wa}`, 'bridge');
             }
         } catch(e) {}
     }
 
-    async function triggerKill() {
-        if(confirm("❗ MATIKAN SELURUH SISTEM?")) {
-            await fetch(`${GATEWAY_PROXY}/command`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action: { type: 'kill' }, description: 'GLOBAL KILL' })
-            });
-            alert("Kill signal sent.");
-        }
-    }
-
     setInterval(updateStatus, 3000);
-    updateStatus();
 </script>
 </body>
 </html>
