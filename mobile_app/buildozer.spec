@@ -45,7 +45,7 @@ fullscreen = 0
 # icon.filename = %(source.dir)s/data/icon.png
 
 # --- Fitur Android ---
-android.features = android.hardware.camera
+# android.features = 
 
 # --- Branch python-for-android ---
 p4a.branch = master
