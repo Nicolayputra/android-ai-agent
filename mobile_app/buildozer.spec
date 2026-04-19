@@ -1,41 +1,62 @@
 [app]
-title = Sovereign Core V5
-package.name = sovereigncore
-package.domain = org.antigravity
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-version = 5.0.0
-requirements = python3,kivy,requests,urllib3,certifi,idna,charset-normalizer
 
-# (str) Prescribed orientation
+# --- Identitas Aplikasi ---
+title = Noir Sovereign Core
+package.name = noirsmc
+package.domain = org.antigravity
+version = 7.2.0
+
+# --- Sumber Kode ---
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,json
+source.exclude_dirs = tests, bin, .buildozer
+
+# --- Dependensi Python ---
+# Hanya dependensi yang PASTI ada di python-for-android recipes
+requirements = python3,kivy==2.3.0,requests,urllib3,certifi,idna,charset-normalizer
+
+# --- Target Platform ---
+android.api = 33
+android.minapi = 24
+android.ndk = 25b
+android.sdk = 33
+
+# --- Arsitektur (arm64-v8a adalah target utama Redmi Note 14) ---
+android.archs = arm64-v8a
+
+# --- Izin Sistem (Sovereign Control) ---
+android.permissions = \
+    INTERNET, \
+    ACCESS_NETWORK_STATE, \
+    WAKE_LOCK, \
+    FOREGROUND_SERVICE, \
+    READ_EXTERNAL_STORAGE, \
+    WRITE_EXTERNAL_STORAGE, \
+    CAMERA, \
+    RECEIVE_BOOT_COMPLETED, \
+    SYSTEM_ALERT_WINDOW
+
+# --- Orientasi ---
 orientation = portrait
 
-# (list) Permissions
-android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, ACCESS_NETWORK_STATE, WAKE_LOCK, FOREGROUND_SERVICE
-
-# (int) Target Android API
-android.api = 33
-android.minapi = 21
-
-# (str) Android entry point
-python_for_android.branch = master
-
-# (list) Android service definitions
-# (str) Name:Module
-services = SovereignEngine:main.py
-
-# (bool) Indicate if the application should be fullscreen
+# --- Fullscreen ---
 fullscreen = 0
 
-# (list) Android additionnal libraries
-android.add_libs_armeabi_v7a = lib/armeabi-v7a/libpy.so
-android.add_libs_arm64_v8a = lib/arm64-v8a/libpy.so
-
-# (str) Icon of the application
+# --- Icon (Gunakan default jika belum ada) ---
 # icon.filename = %(source.dir)s/data/icon.png
 
-# (str) Prescribed orientation
-orientation = portrait
+# --- Fitur Android ---
+android.features = android.hardware.camera
+
+# --- Branch python-for-android ---
+p4a.branch = master
+
+# --- Gradle ---
+android.gradle_dependencies = com.android.support:support-v4:28.0.0
+
+# --- Wearable API atau extras (kosong dulu) ---
+# android.add_libs_armeabi_v7a =
+# android.add_libs_arm64_v8a =
 
 [buildozer]
 log_level = 2
