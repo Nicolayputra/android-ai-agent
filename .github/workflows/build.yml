@@ -31,13 +31,17 @@ jobs:
           restore-keys: |
             buildozer-local-${{ hashFiles('mobile_app/buildozer.spec') }}-
 
-      - name: Build APK with official Kivy/Buildozer Docker image
+      - name: Build Release APK with official Kivy/Buildozer Docker image
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/mobile_app:/home/user/hostcwd \
             -v ~/.buildozer:/home/user/.buildozer \
+            -e P4A_RELEASE_KEYSTORE=/home/user/hostcwd/noir_smc_release.keystore \
+            -e P4A_RELEASE_KEYSTORE_PASSWD=noir1234 \
+            -e P4A_RELEASE_KEYALIAS_PASSWD=noir1234 \
+            -e P4A_RELEASE_KEYALIAS=noirk \
             kivy/buildozer:latest \
-            android debug
+            android release
 
       - name: List built APKs
         run: |
