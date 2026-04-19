@@ -1,5 +1,5 @@
 """
-NOIR SOVEREIGN MOBILE CORE (SMC) v7.2
+NOIR SOVEREIGN MOBILE CORE (SMC) v7.5
 =======================================
 Framework: Kivy + Buildozer (Android Native)
 Target: Redmi Note 14 (HyperOS / arm64-v8a)
@@ -26,18 +26,18 @@ from kivy.clock import Clock
 
 # --- CONFIG ---
 GATEWAY_URL = os.environ.get("NOIR_GATEWAY_URL", "https://noir-agent-gateway.si-umkm-ikm-pbd.workers.dev")
-API_KEY     = os.environ.get("NOIR_API_KEY", "NOIR_SOVEREIGN_KEY_V72")
-DEVICE_ID   = os.environ.get("NOIR_DEVICE_ID", "REDMI_NOTE_14_SMC_V72")
+API_KEY     = os.environ.get("NOIR_API_KEY", "NOIR_AGENT_KEY_V6_SI_UMKM_PBD_2026")
+DEVICE_ID   = os.environ.get("NOIR_DEVICE_ID", "REDMI_NOTE_14")
 
 
 class SovereignCore(App):
     def build(self):
-        self.title = "Noir SMC v7.2"
+        self.title = "Noir SMC v7.5"
 
         root = BoxLayout(orientation='vertical', padding=10, spacing=5)
 
         self.log_label = Label(
-            text="[b]NOIR SOVEREIGN CORE v7.2[/b]\nStatus: [color=00ff88]BOOTING...[/color]",
+            text="[b]NOIR SOVEREIGN CORE v7.5[/b]\nStatus: [color=00ff88]BOOTING...[/color]",
             markup=True,
             font_size='14sp',
             halign='left',
@@ -57,7 +57,7 @@ class SovereignCore(App):
         """Called after build(). Start all background services."""
         self._log("[SMC] Engine Starting...")
         self._acquire_wakelock()
-        # Launch background thread (only once, here in on_start)
+        # Launch background thread
         t = threading.Thread(target=self._main_loop, daemon=True)
         t.start()
 
@@ -93,7 +93,7 @@ class SovereignCore(App):
             self.wakelock.acquire()
             self._log("[SMC] WakeLock: ACQUIRED")
         except Exception as e:
-            self._log(f"[SMC] WakeLock skipped (not Android): {e}")
+            self._log(f"[SMC] WakeLock skipped: {e}")
 
     def _register(self):
         """Register this device with the Cloudflare Gateway."""
@@ -105,7 +105,7 @@ class SovereignCore(App):
             r = requests.post(
                 f"{GATEWAY_URL}/agent/register",
                 headers=headers,
-                json={"device_id": DEVICE_ID, "agent": "Noir SMC v7.2"},
+                json={"device_id": DEVICE_ID, "agent": "Noir SMC v7.5"},
                 timeout=15
             )
             if r.status_code == 200:
@@ -116,10 +116,7 @@ class SovereignCore(App):
             self._log(f"[SMC] Registration Error: {e}")
 
     def _main_loop(self):
-        """
-        Main polling loop.
-        Adaptive interval: Turbo(1s) when commands arrive, Power Save (up to 15s) when idle.
-        """
+        """Main polling loop."""
         self._register()
         poll_interval = 5
 
@@ -138,19 +135,17 @@ class SovereignCore(App):
                     commands = data.get("commands", [])
 
                     if commands:
-                        poll_interval = 1  # Turbo Mode
+                        poll_interval = 1
                         for cmd in commands:
                             self._execute(cmd)
                     else:
-                        # Adaptive Power Save
                         poll_interval = min(poll_interval + 1, 15)
-
                 else:
                     self._log(f"[SMC] Poll: HTTP {resp.status_code}")
                     poll_interval = 10
 
             except requests.exceptions.ConnectionError:
-                self._log("[SMC] No network. Retrying in 30s...")
+                self._log("[SMC] No network. Retrying...")
                 poll_interval = 30
             except Exception as e:
                 self._log(f"[SMC] Loop Error: {e}")
@@ -230,7 +225,6 @@ class SovereignCore(App):
             result = {"success": False, "error": str(e)}
             self._log(f"[SMC] Exec Error: {e}")
 
-        # Report result back to gateway
         self._report_result(cmd_id, result)
 
     def _report_result(self, cmd_id, result):

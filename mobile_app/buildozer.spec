@@ -16,8 +16,8 @@ source.exclude_dirs = tests, bin, .buildozer
 requirements = python3,kivy==2.3.0,requests,urllib3,certifi,idna,charset-normalizer
 
 # --- Target Platform ---
-android.api = 33
-android.minapi = 24
+android.api = 34
+android.minapi = 26
 android.accept_sdk_license = True
 
 # --- Arsitektur (arm64-v8a adalah target utama Redmi Note 14) ---
