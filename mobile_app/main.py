@@ -199,9 +199,10 @@ class SovereignCore(App):
                 result = {"success": True, "output": f"Stopped {pkg}"}
 
             elif atype in ("screenshot", "capture"):
-                path = "/sdcard/Download/noir_vision.png"
+                # Use internal storage to avoid /sdcard permission issues on Android 14
+                path = os.path.join(App.get_running_app().user_data_dir, "noir_vision.png")
                 os.system(f"screencap -p {path}")
-                time.sleep(0.5)
+                time.sleep(1.0) # Wait for file to write
 
                 with open(path, 'rb') as f:
                     r = requests.post(
