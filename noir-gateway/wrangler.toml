@@ -1,0 +1,25 @@
+name = "noir-agent-gateway"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+# D1 Database — Command Queue & Agent Memory
+# Jalankan: wrangler d1 create noir-db
+# Salin database_id yang dihasilkan ke sini
+[[d1_databases]]
+binding = "DB"
+database_name = "noir-db"
+database_id = "6ba7279d-e022-481e-8d1b-d05aa773d305"
+
+# R2 Bucket — Visual Memory & Screenshots
+# Jalankan: wrangler r2 bucket create noir-storage
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "noir-storage"
+
+# Secret: wrangler secret put NOIR_API_KEY
+[vars]
+ENVIRONMENT = "production"

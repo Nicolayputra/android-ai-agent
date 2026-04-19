@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noir Omni-Dashboard v7</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
+        
+        :root {
+            --bg: #050505;
+            --panel: rgba(15, 15, 20, 0.8);
+            --neon: #00f2ff;
+            --gold: #ffb300;
+            --danger: #ff3c3c;
+            --success: #00ffa3;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #101520 0%, #050505 100%);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-rows: 70px 1fr 200px;
+            height: 100vh;
+            padding: 15px;
+            gap: 15px;
+        }
+
+        .glass {
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+        }
+
+        .brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--neon);
+            text-shadow: 0 0 15px var(--neon);
+        }
+
+        .status-container { display: flex; gap: 25px; }
+        .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .orb { width: 12px; height: 12px; border-radius: 50%; background: #222; transition: 0.5s; }
+        .orb.online { background: var(--success); box-shadow: 0 0 15px var(--success); }
+        .orb.offline { background: var(--danger); box-shadow: 0 0 15px var(--danger); }
+
+        /* Main Content Grid */
+        main {
+            display: grid;
+            grid-template-columns: 1fr 1fr 380px;
+            gap: 15px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* Neural Interaction Column */
+        .neural-center { padding: 25px; display: flex; flex-direction: column; }
+        .prompt-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        textarea {
+            flex: 1;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            resize: none;
+            outline: none;
+            transition: 0.3s;
+        }
+        textarea:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
+        
+        .btn-transmit {
+            height: 50px;
+            background: var(--neon);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            letter-spacing: 2px;
+        }
+        .btn-transmit:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,242,255,0.4); }
+
+        /* Quick Mission Column */
+        .quick-missions { padding: 25px; }
+        .mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .mission-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .mission-card:hover { border-color: var(--neon); background: rgba(0,242,255,0.05); }
+        .mission-card i { font-size: 1.5rem; margin-bottom: 10px; display: block; font-style: normal; }
+        .mission-card span { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; }
+
+        /* Log Column */
+        .mission-logs { display: flex; flex-direction: column; overflow: hidden; }
+        .log-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .log-item {
+            padding: 12px;
+            border-left: 3px solid var(--neon);
+            background: rgba(255,255,255,0.02);
+            font-size: 0.85rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Footer Console */
+        footer { padding: 20px; font-family: 'Courier New', monospace; font-size: 0.8rem; }
+        .console { height: 100%; overflow-y: auto; color: #888; }
+        .console-line { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <header class="glass">
+        <div class="brand">NOIR OMNI-DASHBOARD <span style="font-size:0.6rem; vertical-align:middle; color:var(--gold)">v7.2 FINAL</span></div>
+        <div class="status-container">
+            <div class="status-item"><div id="status-agent" class="orb"></div> MOBILE</div>
+            <div class="status-item"><div id="status-pc" class="orb"></div> PC REMOTE</div>
+            <div class="status-item"><div id="status-vps" class="orb"></div> BRAIN</div>
+            <div class="status-item"><div id="status-learning" class="orb" style="background:var(--gold)"></div> PHASE: <span id="learning-phase">IDLE</span></div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Neural Interaction -->
+        <section class="neural-center glass">
+            <h2 class="section-title">NEURAL COMMAND CENTER</h2>
+            <div class="prompt-box">
+                <textarea id="ai-prompt" placeholder="Berikan perintah atau pertanyaan... (Contoh: 'Analisis kondisi HP dan berikan saran optimasi')"></textarea>
+                <button class="btn-transmit" onclick="transmitNeural()">TRANSMIT TO ALL MODELS</button>
+            </div>
+            
+            <!-- MULTI-AI CONSENSUS PANEL -->
+            <div id="consensus-container" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:20px;">
+                <div class="mission-card" style="cursor:default; text-align:left; background:rgba(0,242,255,0.05)">
+                    <span style="color:var(--neon); font-size:0.6rem">GEMINI 1.5</span>
+                    <div id="res-gemini" style="font-size:0.75rem; margin-top:5px; height:80px; overflow-y:auto; color:#ccc">Awaiting signal...</div>
+                </div>
+                <div class="mission-card" style="cursor:default; text-align:left; background:rgba(255,60,60,0.05)">
+                    <span style="color:var(--danger); font-size:0.6rem">DEEPSEEK R1</span>
+                    <div id="res-deepseek" style="font-size:0.75rem; margin-top:5px; height:80px; overflow-y:auto; color:#ccc">Awaiting signal...</div>
+                </div>
+                <div class="mission-card" style="cursor:default; text-align:left; background:rgba(255,179,0,0.05)">
+                    <span style="color:var(--gold); font-size:0.6rem">QWEN 2.5</span>
+                    <div id="res-qwen" style="font-size:0.75rem; margin-top:5px; height:80px; overflow-y:auto; color:#ccc">Awaiting signal...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Missions -->
+        <section class="quick-missions glass">
+            <h2 class="section-title">QUICK MISSION CONTROL</h2>
+            <!-- AI PERMISSION ALERT (Hidden by default) -->
+            <div id="permission-alert" class="mission-card" style="display:none; border-color:var(--gold); background:rgba(255,179,0,0.1); margin-bottom:15px; grid-column: span 2">
+                <span style="color:var(--gold)">🛡️ AI PERMISSION REQUESTED</span>
+                <div id="permission-text" style="font-size:0.7rem; margin:10px 0"></div>
+                <div style="display:flex; gap:5px">
+                    <button class="btn-transmit" onclick="grantPermission(true)" style="height:30px; font-size:0.6rem">YES</button>
+                    <button class="btn-transmit" onclick="grantPermission(false)" style="height:30px; font-size:0.6rem; background:var(--danger)">NO</button>
+                </div>
+            </div>
+
+            <div class="mission-grid">
+                <div class="mission-card" onclick="exec('screenshot')"><i>📸</i><span>SCREENSHOT</span></div>
+                <div class="mission-card" onclick="exec('pc_task', {cmd: 'dir'})"><i>💻</i><span>PC DIR</span></div>
+                <div class="mission-card" onclick="exec('battery')"><i>🔋</i><span>BATTERY</span></div>
+                <div class="mission-card" onclick="exec('shell', {cmd: 'uptime'})"><i>⚡</i><span>SYS UPTIME</span></div>
+            </div>
+        </section>
+
+        <!-- Mission Logs -->
+        <section class="mission-logs glass">
+            <h2 class="section-title" style="padding:20px 20px 0">MISSION LOGS</h2>
+            <div class="log-container" id="log-box">
+                <div class="log-item">Initializing Sovereign System...</div>
+            </div>
+            
+            <!-- SECURITY OVERRIDE PANEL -->
+            <div style="padding:20px; border-top:1px solid var(--border)">
+                <span class="section-title" style="color:var(--danger)">SECURITY OVERRIDE</span>
+                <div style="display:flex; gap:10px; margin-top:10px">
+                    <button class="btn-transmit" onclick="triggerKill()" style="background:var(--danger); flex:1">GLOBAL KILL-SWITCH</button>
+                    <button class="btn-transmit" onclick="confirmHandshake()" id="handshake-btn" style="background:var(--gold); flex:1; display:none">CONFIRM HANDSHAKE</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="glass">
+        <div class="console" id="console-box">
+            <div class="console-line">> System initialized. Waiting for user authorization...</div>
+        </div>
+    </footer>
+</div>
+
+<script>
+    function log(msg, type='info') {
+        const box = document.getElementById('log-box');
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        item.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        box.prepend(item);
+        if(box.childNodes.length > 15) box.lastChild.remove();
+    }
+
+    async function updateStatus() {
+        try {
+            const r = await fetch('/api/status');
+            const d = await r.json();
+            document.getElementById('status-agent').className = `orb ${d.agent ? 'online' : 'offline'}`;
+            document.getElementById('status-vps').className = `orb online`; // VPS is hosting this
+            document.getElementById('status-cloud').className = `orb online`;
+        } catch(e) {}
+    }
+
+    let pendingMission = null;
+
+    async function exec(action, params = {}) {
+        // Tindakan kritis memerlukan Handshake
+        const criticalActions = ['shell', 'brain_query', 'delete'];
+        if(criticalActions.includes(action) && !pendingMission) {
+            log(`[SECURITY] Tindakan Kritis Terdeteksi: ${action.toUpperCase()}`, 'err');
+            log(`Mohon lakukan Neural Handshake untuk mengizinkan.`, 'gold');
+            document.getElementById('handshake-btn').style.display = 'block';
+            pendingMission = {action, params};
+            return;
+        }
+
+        log(`Executing Mission: ${action.toUpperCase()}`);
+        try {
+            const r = await fetch('/api/command', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: { type: action, ...params }, description: `Manual: ${action}` })
+            });
+            const d = await r.json();
+            if(d.status === 'queued') log(`Mission Queued: ID ${d.id}`);
+        } catch(e) { log(`Mission Failed: ${e}`, 'err'); }
+        
+        pendingMission = null;
+        document.getElementById('handshake-btn').style.display = 'none';
+    }
+
+    function confirmHandshake() {
+        if(!pendingMission) return;
+        log("🤝 Neural Handshake Terkonfirmasi.");
+        exec(pendingMission.action, pendingMission.params);
+    }
+
+    async function triggerKill() {
+        if(confirm("❗ PERINGATAN: Matikan seluruh sistem secara total?")) {
+            log("🛑 INITIATING GLOBAL KILL-SWITCH...", 'err');
+            await fetch('/api/command', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: { type: 'global_kill' }, description: 'NUCLEAR KILL-SWITCH' })
+            });
+            setTimeout(() => location.reload(), 2000);
+        }
+    }
+
+    async function transmitNeural() {
+        const prompt = document.getElementById('ai-prompt').value;
+        if(!prompt) return;
+        
+        log(`📡 Transmitting Neural Prompt to Consensus Engine...`);
+        document.getElementById('res-gemini').innerText = "Analyzing...";
+        document.getElementById('res-deepseek').innerText = "Thinking...";
+        document.getElementById('res-qwen').innerText = "Processing...";
+
+        try {
+            const r = await fetch('/api/neural', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ prompt: prompt })
+            });
+            const d = await r.json();
+            
+            document.getElementById('res-gemini').innerText = d.opinions.gemini || "No data.";
+            document.getElementById('res-deepseek').innerText = d.opinions.deepseek || "No data.";
+            document.getElementById('res-qwen').innerText = d.opinions.qwen || "No data.";
+            
+            log(`🤝 Consensus reached. Autonomous action prepared.`);
+        } catch(e) { 
+            log(`Neural Link Error: ${e}`, 'err'); 
+        }
+        
+        document.getElementById('ai-prompt').value = '';
+    }
+
+    setInterval(updateStatus, 5000);
+    updateStatus();
+</script>
+</body>
+</html>

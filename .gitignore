@@ -1,0 +1,10 @@
+node_modules/
+.buildozer/
+bin/
+venv/
+*.pyc
+__pycache__/
+.env
+.DS_Store
+*.log
+project.tar.gz

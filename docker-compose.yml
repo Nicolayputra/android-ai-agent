@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  noir-brain:
+    build: .
+    container_name: noir-brain
+    restart: always
+    env_file: .env
+    volumes:
+      - ./knowledge:/app/knowledge
+      - ./logs:/app/logs
+    networks:
+      - noir-net
+
+  noir-dashboard:
+    image: python:3.10-slim
+    container_name: noir-dashboard
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./noir-ui:/app
+      - .env:/app/.env
+    ports:
+      - "8765:8765"
+    command: python web_server.py
+    networks:
+      - noir-net
+
+networks:
+  noir-net:
+    driver: bridge
