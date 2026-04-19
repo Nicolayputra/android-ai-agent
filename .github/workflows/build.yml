@@ -31,7 +31,7 @@ jobs:
           restore-keys: |
             buildozer-local-${{ hashFiles('mobile_app/buildozer.spec') }}-
 
-      - name: Build Release APK with official Kivy/Buildozer Docker image
+      - name: Build Release AAB with Buildozer Docker
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/mobile_app:/home/user/hostcwd \
@@ -41,11 +41,33 @@ jobs:
             -e P4A_RELEASE_KEYALIAS_PASSWD=noir1234 \
             -e P4A_RELEASE_KEYALIAS=noirk \
             kivy/buildozer:latest \
-            android release apk
+            android release
 
-      - name: List built APKs
+      - name: Convert AAB to APK using bundletool
         run: |
-          find ${{ github.workspace }}/mobile_app/bin -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No files found in bin/"
+          # Download bundletool
+          wget -q https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar -O bundletool.jar
+
+          # Find the AAB file
+          AAB_FILE=$(find ${{ github.workspace }}/mobile_app/bin -name "*.aab" | head -1)
+          echo "Found AAB: $AAB_FILE"
+
+          # Convert AAB to universal APKs
+          java -jar bundletool.jar build-apks \
+            --bundle="$AAB_FILE" \
+            --output=${{ github.workspace }}/mobile_app/bin/noirsmc.apks \
+            --mode=universal \
+            --ks=${{ github.workspace }}/mobile_app/noir_smc_release.keystore \
+            --ks-pass=pass:noir1234 \
+            --ks-key-alias=noirk \
+            --key-pass=pass:noir1234
+
+          # Extract the universal APK from the .apks zip
+          cd ${{ github.workspace }}/mobile_app/bin
+          unzip -o noirsmc.apks -d apks_extracted
+          mv apks_extracted/universal.apk noirsmc-7.2.0-release-signed.apk
+          echo "APK created: noirsmc-7.2.0-release-signed.apk"
+          ls -la *.apk *.aab
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
