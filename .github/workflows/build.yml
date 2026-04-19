@@ -41,15 +41,17 @@ jobs:
             -e P4A_RELEASE_KEYALIAS_PASSWD=noir1234 \
             -e P4A_RELEASE_KEYALIAS=noirk \
             kivy/buildozer:latest \
-            android release
+            android release apk
 
       - name: List built APKs
         run: |
-          find ${{ github.workspace }}/mobile_app/bin -name "*.apk" 2>/dev/null || echo "No APK found in bin/"
+          find ${{ github.workspace }}/mobile_app/bin -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No files found in bin/"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: SovereignCore-APK
-          path: mobile_app/bin/*.apk
+          path: |
+            mobile_app/bin/*.apk
+            mobile_app/bin/*.aab
           retention-days: 30
