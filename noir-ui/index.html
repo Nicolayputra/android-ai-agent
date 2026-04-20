@@ -1,251 +1,290 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noir Sovereign Prime v10.0</title>
+    <title>NOIR SOVEREIGN | v13.0 ELITE-SOVEREIGN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&family=Fira+Code:wght@400;500&display=swap');
-        
         :root {
-            --bg: #010103;
-            --panel: rgba(5, 5, 10, 0.95);
-            --neon: #00f2ff;
+            --bg: #020204;
+            --panel: rgba(10, 10, 18, 0.9);
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.4);
             --gold: #ffb300;
-            --danger: #ff3c3c;
-            --success: #00ffa3;
-            --border: rgba(0, 242, 255, 0.1);
+            --danger: #ff0055;
+            --success: #00ffaa;
+            --text: #e0e0e5;
+            --border: rgba(0, 242, 255, 0.15);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; }
         body {
             background: var(--bg);
-            color: #fff;
-            font-family: 'Rajdhani', sans-serif;
+            color: var(--text);
             height: 100vh;
             overflow: hidden;
-            display: flex;
+            background-image: 
+                radial-gradient(circle at 20% 30%, #0a0a1a 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, #1a0a0a 0%, transparent 50%);
         }
 
-        /* SIDEBAR: SOVEREIGN CONTROL */
-        nav {
-            width: 280px;
-            background: var(--panel);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            gap: 20px;
+        .layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            height: 100vh;
+            padding: 15px;
+            gap: 15px;
         }
-
-        .nav-header { font-family: 'Orbitron'; font-size: 0.8rem; color: var(--gold); margin-bottom: 10px; }
-        .nav-btn {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 6px;
-            color: #ccc;
-            cursor: pointer;
-            text-align: left;
-            font-size: 0.75rem;
-            transition: 0.3s;
-        }
-        .nav-btn:hover { background: var(--border); color: var(--neon); }
-        .nav-btn.danger { border-color: var(--danger); color: var(--danger); }
-        .nav-btn.danger:hover { background: rgba(255, 60, 60, 0.1); }
-
-        /* MAIN AREA */
-        .viewport { flex: 1; display: grid; grid-template-rows: 60px 1fr 200px; gap: 10px; padding: 10px; }
 
         .glass {
             background: var(--panel);
-            backdrop-filter: blur(25px);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-        .brand { font-family: 'Orbitron'; font-weight: 700; color: var(--neon); letter-spacing: 2px; }
+        /* SIDEBAR */
+        .sidebar { padding: 25px; }
+        .brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent-glow);
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
 
-        main { display: grid; grid-template-columns: 1fr 350px; gap: 10px; overflow: hidden; }
+        .section-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-        /* CORE INTERFACE */
-        .core-interface { display: flex; flex-direction: column; }
-        .display-area { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        
-        .msg { padding: 15px; border-radius: 8px; max-width: 90%; position: relative; border: 1px solid transparent; }
-        .msg-ai { background: rgba(0, 242, 255, 0.02); border-color: var(--border); align-self: flex-start; }
-        .msg-system { border-left: 3px solid var(--gold); background: rgba(255, 179, 0, 0.05); font-size: 0.75rem; color: var(--gold); }
-        
-        .input-bar { padding: 20px; display: flex; gap: 10px; border-top: 1px solid var(--border); }
-        input { flex: 1; background: #000; border: 1px solid var(--border); padding: 12px; color: #fff; border-radius: 4px; outline: none; }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(255, 179, 0, 0.2); }
 
-        /* EVOLUTION HUB (RIGHT) */
-        .evo-hub { display: flex; flex-direction: column; }
-        .evo-scroll { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
-        .proposal-card {
-            background: rgba(0, 255, 163, 0.03);
-            border: 1px solid rgba(0, 255, 163, 0.1);
-            padding: 15px;
+        .nav-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 14px;
             border-radius: 8px;
-        }
-        .proposal-title { font-size: 0.7rem; font-weight: 700; color: var(--success); margin-bottom: 5px; }
-        .proposal-body { font-size: 0.7rem; color: #aaa; line-height: 1.4; margin-bottom: 10px; }
-
-        /* FOOTER (MEDIA) */
-        footer { padding: 15px; display: flex; gap: 15px; overflow-x: auto; }
-        .media-box { min-width: 220px; height: 100%; border: 1px dashed #222; border-radius: 8px; }
-
-        /* PERMISSION POPUP */
-        #perm-popup {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 450px; padding: 40px; z-index: 2000; display: none; text-align: center;
+            color: #aaa;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .btn-prime {
-            background: var(--neon); color: #000; border: none; padding: 10px 25px;
-            border-radius: 4px; cursor: pointer; font-family: 'Orbitron'; font-weight: 700; font-size: 0.7rem;
+        .nav-btn:hover {
+            background: rgba(0, 242, 255, 0.08);
+            border-color: var(--accent);
+            color: #fff;
+            transform: translateX(5px);
         }
 
-        @keyframes pulse { 0% { opacity: 0.3; } 100% { opacity: 1; } }
-        .live-tag { font-size: 0.5rem; background: var(--danger); padding: 2px 5px; border-radius: 3px; animation: pulse 1s infinite alternate; }
+        /* MAIN CONTENT */
+        .main-viewport { display: grid; grid-template-rows: 1fr 200px; gap: 15px; }
+        
+        .vision-container { position: relative; flex: 1; background: #000; overflow: hidden; }
+        .vision-img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .scanline {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(0,242,255,0.05) 50%, transparent 100%);
+            animation: scan 6s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
+
+        .action-bar { padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+
+        .action-btn {
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .action-btn:hover {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* RIGHT PANEL: NEURAL HUB */
+        .neural-hub { padding: 20px; }
+        
+        .log-list { flex: 1; overflow-y: auto; padding-right: 10px; }
+        .log-item {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #889;
+        }
+        .log-item span { color: var(--accent); }
+
+        .catalyst-card {
+            background: rgba(255, 179, 0, 0.05);
+            border: 1px solid rgba(255, 179, 0, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 6px; background: #111; border-radius: 3px; margin: 15px 0; overflow: hidden;
+        }
+        .progress-fill { height: 100%; background: var(--gold); width: 0%; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* STATUS BADGE */
+        .status-badge {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(0, 255, 170, 0.1);
+            color: var(--success);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+            border: 1px solid var(--success);
+        }
+
+        .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); }
+
     </style>
 </head>
 <body>
 
-<nav>
-    <div class="brand" style="font-size: 1rem; margin-bottom: 30px;">NOIR PRIME</div>
-    
-    <div class="nav-header">STRATEGIC COMMAND</div>
-    <button class="nav-btn" onclick="sendCmd('stealth', {enabled: true})">🥷 ACTIVATE DEVICE STEALTH</button>
-    <button class="nav-btn" onclick="sendCmd('stealth', {enabled: false})">👁️ DEACTIVATE STEALTH</button>
-    <button class="nav-btn" onclick="sendCmd('ui_dump')">🧬 RE-SCAN UI STRUCTURE</button>
-    
-    <div class="nav-header" style="margin-top: 20px;">SYSTEM MAINTENANCE</div>
-    <button class="nav-btn" onclick="sendCmd('shell', {cmd: 'reboot'})">🔄 REBOOT REDMI N14</button>
-    <button class="nav-btn" onclick="triggerHealing()">🩹 TRIGGER AUTO-HEALING</button>
-    <button class="nav-btn danger" onclick="killTelegram()">📡 KILL TELEGRAM BRIDGE</button>
-
-    <div style="flex: 1"></div>
-    <div class="nav-header">SOVEREIGN AUTH</div>
-    <div style="font-size: 0.6rem; color: #555;">USER Handshake: SECURE</div>
-</nav>
-
-<div class="viewport">
-    <header class="glass">
-        <div style="display: flex; gap: 20px; align-items: center;">
-            <div id="orb-status" style="width: 12px; height: 12px; background: #333; border-radius: 50%;"></div>
-            <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;">CORE_LINK: ONLINE</span>
-            <span class="live-tag">REALTIME_SYNC</span>
-        </div>
-        <div style="display: flex; gap: 30px; font-size: 0.7rem; font-weight: 700;">
-            <div id="val-cpu">CPU: --%</div>
-            <div id="val-ram">RAM: --%</div>
-            <div id="val-temp" style="color:var(--gold)">TEMP: 38°C</div>
-        </div>
-    </header>
-
-    <main>
-        <section class="core-interface glass">
-            <div class="display-area" id="chat-box">
-                <div class="msg msg-ai">Noir Sovereign Prime v10.0 Initialized. Awasi pengembangan diri saya di panel kanan.</div>
-            </div>
-            <div class="input-bar">
-                <input type="text" id="chat-input" placeholder="Execute global command..." onkeypress="if(event.key==='Enter') transmit()">
-                <button class="btn-prime" onclick="transmit()">TRANSMIT</button>
-            </div>
-        </section>
-
-        <section class="evo-hub glass">
-            <div class="nav-header" style="padding: 15px; border-bottom: 1px solid var(--border)">SELF-EVOLUTION HUB</div>
-            <div class="evo-scroll" id="evo-box">
-                <div class="proposal-card">
-                    <div class="proposal-title">ANALISIS GANGGUAN #042</div>
-                    <div class="proposal-body">Terdeteksi latensi tinggi pada port 80. Mengusulkan pembersihan cache socket otonom.</div>
-                    <button class="btn-prime" style="width: 100%; height: 30px; font-size: 0.6rem;" onclick="resolveProposal('heal_socket')">APPROVE HEALING</button>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="glass">
-        <div class="media-box"></div>
-        <div class="media-box"></div>
-        <div class="media-box"></div>
-        <div class="media-box"></div>
-    </footer>
-</div>
-
-<div id="perm-popup" class="glass">
-    <div style="color:var(--danger); font-family: 'Orbitron'; margin-bottom: 15px;">🛡️ CORE AUTHORIZATION</div>
-    <div id="perm-desc" style="font-size: 0.8rem; margin-bottom: 25px;"></div>
-    <div style="display: flex; justify-content: center; gap: 20px;">
-        <button class="btn-prime" style="background:var(--success)" onclick="resolvePerm(true)">GRANT</button>
-        <button class="btn-prime" style="background:var(--danger); color:#fff" onclick="resolvePerm(false)">DENY</button>
-    </div>
-</div>
-
-<script>
-    const API = "/api";
-
-    function addMsg(text, type='ai') {
-        const box = document.getElementById('chat-box');
-        const div = document.createElement('div');
-        div.className = `msg msg-${type}`;
-        div.innerText = text;
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-    }
-
-    async function transmit() {
-        const input = document.getElementById('chat-input');
-        const val = input.value.trim();
-        if(!val) return;
-        addMsg(val, 'user');
-        input.value = '';
-        const r = await fetch(`${API}/command`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ action: { type: 'shell', cmd: val }, description: val })
-        });
-        const d = await r.json();
-        addMsg(`Operation ID: ${d.command_id || d.id}`, 'system');
-    }
-
-    async function sendCmd(type, params={}) {
-        addMsg(`Triggering: ${type.toUpperCase()}...`, 'system');
-        await fetch(`${API}/command`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ action: { type: type, ...params }, description: type })
-        });
-    }
-
-    async function killTelegram() {
-        if(confirm("Terminate Telegram Bridge?")) {
-            await sendCmd('kill-telegram');
-        }
-    }
-
-    async function triggerHealing() {
-        addMsg("Menjalankan prosedur Self-Healing otonom...", "system");
-        await sendCmd('shell', {cmd: 'pm trim-caches 999G'});
-    }
-
-    async function updateStatus() {
-        try {
-            const r = await fetch(`${API}/status`);
-            const d = await r.json();
-            document.getElementById('val-cpu').innerText = `CPU: ${d.stats?.cpu || 0}%`;
-            document.getElementById('val-ram').innerText = `RAM: ${d.stats?.ram || 0}%`;
-            document.getElementById('orb-status').style.background = d.agent ? 'var(--success)' : 'var(--danger)';
+    <div class="layout">
+        <!-- SIDEBAR -->
+        <div class="glass sidebar">
+            <div class="brand">NOIR SOVEREIGN</div>
             
-            if(d.permission_needed) {
-                document.getElementById('perm-desc').innerText = d.permission_desc;
-                document.getElementById('perm-popup').style.display = 'block';
-            }
-        } catch(e) {}
-    }
+            <div class="section-label">STRATEGIC COMMAND</div>
+            <button class="nav-btn" onclick="sendCmd('screenshot')">📸 SCAN VISION STREAM</button>
+            <button class="nav-btn" onclick="sendCmd('ui_dump')">🧬 RE-MAP UI STRUCTURE</button>
+            <button class="nav-btn" onclick="sendCmd('stealth', {enabled: true})">🥷 ENGAGE STEALTH MODE</button>
+            <button class="nav-btn" onclick="sendCmd('stealth', {enabled: false})">👁️ DISENGAGE STEALTH</button>
 
-    setInterval(updateStatus, 3000);
-</script>
+            <div class="section-label" style="margin-top: 30px;">DEVICE MANAGEMENT</div>
+            <button class="nav-btn" onclick="sendCmd('battery')">⚡ POWER DIAGNOSTICS</button>
+            <button class="nav-btn" onclick="triggerHealing()">🩹 TRIGGER SELF-HEALING</button>
+            <button class="nav-btn" onclick="sendCmd('info')">ℹ️ AGENT MANIFESTO</button>
+        </div>
+
+        <!-- MAIN AREA -->
+        <div class="main-viewport">
+            <div class="glass vision-container">
+                <div class="status-badge">
+                    <div class="status-dot"></div> SYNC ACTIVE [v13.0]
+                </div>
+                <div class="scanline"></div>
+                <img id="vision-feed" class="vision-img" src="/noir_screen.png" alt="Vision Feed">
+            </div>
+
+            <div class="glass action-bar">
+                <button class="action-btn" onclick="sendCmd('tap', {x: 500, y: 1000})">CENTER TAP</button>
+                <button class="action-btn" onclick="sendCmd('keyevent', {key: 26})">POWER TOGGLE</button>
+                <button class="action-btn" onclick="sendCmd('keyevent', {key: 3})">HOME</button>
+                <button class="action-btn" onclick="sendCmd('keyevent', {key: 4})">BACK</button>
+                <button class="action-btn" onclick="showPrompt()" style="background: rgba(255, 179, 0, 0.1); color: var(--gold); border-color: var(--gold);">EXECUTOR PROMPT</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="glass neural-hub">
+            <div class="section-label">NEURAL EVOLUTION LOG</div>
+            <div class="log-list" id="log-list">
+                <div class="log-item"><span>[21:49:01]</span> Sovereign v13.0 ELITE-SOVEREIGN standing by.</div>
+            </div>
+
+            <div class="catalyst-card">
+                <div class="section-label" style="margin-bottom: 10px;">SOVEREIGN CATALYST</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #fff;" id="cat-growth">0.0%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cat-bar"></div>
+                </div>
+                <div style="font-size: 0.65rem; color: #666; font-style: italic;" id="cat-status">Absorbing local intelligence...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = "/api";
+
+        async function sendCmd(type, params={}) {
+            addLog(`Initiating: ${type.toUpperCase()}...`, 'PROCESS');
+            try {
+                const res = await fetch(`${API}/command`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ action: { type, ...params }, description: type })
+                });
+                const data = await res.json();
+                addLog(`Command broadcasted: ${data.command_id}`, 'SUCCESS');
+            } catch (e) {
+                addLog(`Broadcast failed: ${e}`, 'ERROR');
+            }
+        }
+
+        function addLog(msg, tag = 'INFO') {
+            const list = document.getElementById('log-list');
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            const now = new Date().toLocaleTimeString();
+            div.innerHTML = `<span>[${now}]</span> [${tag}] ${msg}`;
+            list.prepend(div);
+        }
+
+        function showPrompt() {
+            const cmd = prompt("Enter Shell Command:");
+            if (cmd) sendCmd('shell', { cmd });
+        }
+
+        function triggerHealing() {
+            sendCmd('shell', {cmd: 'pm trim-caches 999G'});
+            addLog("Self-Healing procedure initiated.", "HEAL");
+        }
+
+        async function updateStatus() {
+            try {
+                const r = await fetch(`${API}/status`);
+                const d = await r.json();
+                
+                if(d.catalyst) {
+                    const growth = (d.catalyst.growth_level * 100).toFixed(1);
+                    document.getElementById('cat-growth').innerText = `${growth}%`;
+                    document.getElementById('cat-bar').style.width = `${growth}%`;
+                    if(d.catalyst.growth_level >= 0.8) {
+                        document.getElementById('cat-status').innerText = "ELITE MISSION READY";
+                        document.getElementById('cat-status').style.color = "var(--success)";
+                    }
+                }
+            } catch(e) {}
+        }
+
+        setInterval(updateStatus, 5000);
+    </script>
 </body>
 </html>

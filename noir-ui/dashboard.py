@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-NOIR AGENT v6 — PC DASHBOARD
-==============================
+NOIR AGENT v13.0 ELITE-SOVEREIGN — PC DASHBOARD
+=============================================
 Command Center: kirim perintah, lihat histori, monitor status.
 Jalankan di PC: python noir-ui/dashboard.py
 """
@@ -64,10 +64,10 @@ def show_results(limit=10):
 
 # ─── MAIN DASHBOARD ───
 def main():
-    print("\n" + "█" * 50)
-    print("  🖤 NOIR AGENT v6 — PC DASHBOARD")
+    print("\n" + "█" * 60)
+    print("  🖤 NOIR AGENT v13.0 ELITE-SOVEREIGN — PC DASHBOARD")
     print("  Authority: USER (Absolute Sovereign)")
-    print("█" * 50)
+    print("█" * 60)
 
     # Cek koneksi
     health = api("GET", "/health")

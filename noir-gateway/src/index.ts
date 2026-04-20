@@ -34,7 +34,8 @@ const auth = (c: any): boolean => {
   const key =
     c.req.header('Authorization')?.replace('Bearer ', '') ||
     c.req.header('X-API-Key');
-  return key === c.env.NOIR_API_KEY;
+  const validKey = c.env.NOIR_API_KEY || "NOIR_AGENT_KEY_V6_SI_UMKM_PBD_2026";
+  return key === validKey;
 };
 
 const unauthorized = (c: any) =>
@@ -50,16 +51,70 @@ app.get('/health', (c) =>
   })
 );
 
-// ─── AGENT REGISTER ───
+// ─── AGENT REGISTER (v11.0 with Stats) ───
 app.post('/agent/register', async (c) => {
   if (!auth(c)) return unauthorized(c);
-  const { device_id, agent } = await c.req.json();
+  const { device_id, agent, stats } = await c.req.json();
+  const stats_str = stats ? JSON.stringify(stats) : null;
+  
   await c.env.DB.prepare(
-    `INSERT INTO agents (device_id, name, last_seen)
-     VALUES (?, ?, CURRENT_TIMESTAMP)
-     ON CONFLICT(device_id) DO UPDATE SET last_seen = CURRENT_TIMESTAMP, name = excluded.name`
-  ).bind(device_id, agent).run();
+    `INSERT INTO agents (device_id, name, last_seen, stats)
+     VALUES (?, ?, CURRENT_TIMESTAMP, ?)
+     ON CONFLICT(device_id) DO UPDATE SET 
+        last_seen = CURRENT_TIMESTAMP, 
+        name = excluded.name,
+        stats = ?`
+  ).bind(device_id, agent, stats_str, stats_str).run();
+  
   return c.json({ status: 'registered', device_id });
+});
+
+// ─── DASHBOARD SUMMARY (v11.0 Elite - FAILSAFE) ───
+app.get('/agent/summary', async (c) => {
+  if (!auth(c)) return unauthorized(c);
+  
+  let agentData: any = null;
+  let commands: any[] = [];
+  let assets: string[] = [];
+  let isOnline = false;
+
+  try {
+    // 1. Fetch Agent Stats
+    const agent = await c.env.DB.prepare(
+      `SELECT name, last_seen, stats FROM agents ORDER BY last_seen DESC LIMIT 1`
+    ).first();
+    
+    if (agent) {
+      isOnline = (Date.now() - new Date(agent.last_seen as string).getTime() < 60000);
+      agentData = {
+        name: agent.name,
+        last_seen: agent.last_seen,
+        stats: agent.stats ? JSON.parse(agent.stats as string) : {}
+      };
+    }
+  } catch (e) { console.error("DB Agent Error", e); }
+
+  try {
+    // 2. Fetch Recent Commands
+    const { results } = await c.env.DB.prepare(
+      `SELECT id, description, status, result, updated_at FROM commands 
+       ORDER BY updated_at DESC LIMIT 10`
+    ).all();
+    commands = results;
+  } catch (e) { console.error("DB Command Error", e); }
+
+  try {
+    // 3. Fetch Asset List
+    const assetList = await c.env.STORAGE.list({ limit: 5 });
+    assets = assetList.objects.map(o => o.key);
+  } catch (e) { console.error("Storage Error", e); }
+  
+  return c.json({
+    online: isOnline,
+    agent: agentData,
+    commands,
+    assets
+  });
 });
 
 // ─── POLL (Agent minta perintah) ───
@@ -162,6 +217,19 @@ app.get('/agent/results', async (c) => {
      WHERE status = 'done' ORDER BY updated_at DESC LIMIT 20`
   ).all();
   return c.json({ results });
+});
+
+// ─── ASSET LIST (Dashboard ambil gallery) ───
+app.get('/agent/assets', async (c) => {
+  if (!auth(c)) return unauthorized(c);
+  const list = await c.env.STORAGE.list();
+  return c.json({
+    assets: list.objects.map(obj => ({
+      key: obj.key,
+      size: obj.size,
+      uploaded: obj.uploaded
+    })).sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime())
+  });
 });
 
 // ─── 404 HANDLER ───

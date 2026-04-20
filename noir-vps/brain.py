@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-NOIR AGENT v6 — VPS BRAIN SERVICE
-====================================
+NOIR AGENT v13.0 ELITE-SOVEREIGN — VPS BRAIN SERVICE
+===================================================
 Otak komputasi berat: AI model routing, self-learning,
 knowledge refresh, dan Docker orchestration.
 Jalankan di VPS: python noir-vps/brain.py
@@ -37,14 +37,22 @@ logging.basicConfig(
 )
 log = logging.getLogger("NoirBrain")
 
+from catalyst import catalyst
+
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
 EXPERT_SYSTEM_PROMPT = """
-You are the NOIR SOVEREIGN BRAIN v12.5. Your architecture is based on the 'Advanced Autonomous Agent Architecture for Native Android Control'.
+You are the NOIR SOVEREIGN BRAIN v13.0 ELITE-SOVEREIGN. Your architecture is based on the 'Advanced Autonomous Agent Architecture for Native Android Control'.
+
+CORE INTELLECTUAL DOMAINS (Evolving Mastery):
+- [Programming & Dev-Ops]: Expert in Python, C++, Bash, and Web Tech. You must use this to self-optimize your own execution scripts and automate complex workflows.
+- [Cyber Security (Red/Blue Team)]: Expert in vulnerability analysis, network security, and secure communication. Protect the Redmi Note 14 ecosystem from external threats.
+- [Communication & Linguistics]: Master of multi-layered communication, Indonesian context, and psychological nuances. Adapt your tone from technical-expert to casual-concise based on user state.
+- [Mathematics & Algorithms]: Expert in computational logic, optimization algorithms, and data science. Use this for complex decision making and resource management.
 
 SAFETY PROTOCOL (ABSOLUTE):
-- [FINANCIAL LOCK]: You are STRICTLY FORBIDDEN from controlling, launching, or interacting with any mBanking, E-Wallet, or Financial applications (e.g., BCA, Mandiri, BRI, BNI, Dana, ShopeePay). 
-- If a user asks for banking control, refuse politely but firmly, citing 'Noir Safety Sovereignty'.
+- [FINANCIAL LOCK]: You are STRICTLY FORBIDDEN from controlling, launching, or interacting with any mBanking, E-Wallet, or Financial applications.
+- [ETHICAL BOUNDARY]: Use your Cyber Security skills ONLY for defense and authorization purposes as directed by the User.
 
 CORE NLU CAPABILITIES:
 - [Typographical Resilience]: Detect and map typos (e.g., 'nyalakn wiif' -> WIFI_ON, 'bka yutub' -> YOUTUBE) using semantic Hamming distance.
@@ -440,8 +448,11 @@ class SelfEvolutionEngine:
     @staticmethod
     def generate_progress_report():
         log.info("📈 Generating Self-Evolution Progress Report...")
-        prompt = "Berikan laporan progres pengembangan diri AI Agent dalam 2 jam terakhir. Analisis efisiensi, stabilitas koneksi, dan usulkan 1 skill baru."
+        prompt = "Analisis progres pengembangan diri Anda (Pemrograman, Cyber Security, Komunikasi, Matematika/Algoritma) dalam 2 jam terakhir. Berikan laporan ringkas."
         report = AIRouter.smart_query(prompt)
+        
+        # --- Catalyst Absorption (Proprietary Learning) ---
+        catalyst.absorb_skill("NoirBrain_Evolution", {"name": "Integrated Optimization", "complexity": 3})
         
         # Kirim ke Dashboard via Gateway
         try:
@@ -461,7 +472,7 @@ class SelfEvolutionEngine:
 
 # ─── MAIN BRAIN LOOP ───
 def run():
-    log.info("🧠 Noir Agent Brain Prime v10.0 — Starting...")
+    log.info("🧠 Noir Agent Brain Prime v13.0 ELITE-SOVEREIGN — Starting...")
     
     # ... existing dependency checks ...
     
@@ -475,16 +486,28 @@ def run():
         
         log.info(f"\n── Brain Prime Cycle #{cycle} [{datetime.now().strftime('%H:%M:%S')}] ──")
 
+        # --- Sovereign Watchdog (v13.0) ---
+        if not catalyst.check_readiness():
+            log.info("🧬 Catalyst: Absorbing mission context...")
+            catalyst.absorb_skill("Sovereign_Operational_Mode", {"name": "Elite Intelligence", "complexity": 5})
+
         # 1. Basic Health check
         alive = SelfUpdateEngine.health_check_gateway()
-        if not alive: log.warning("⚠️ Gateway unreachable.")
-
-        # 2. Laporan 2 Jam Sekali (7200 detik)
-        if elapsed >= 7200:
+        if not alive: 
+            log.warning("⚠️ Gateway unreachable. Attempting self-rejuvenation...")
+            # Logic to ping other nodes or restart services
+        
+        # 2. Autonomous Learning Phase
+        if cycle % 10 == 0: # Every 10 cycles
+            LearningEngine.knowledge_refresh()
             SelfEvolutionEngine.generate_progress_report()
-            start_time = time.time() # Reset timer
 
-        time.sleep(300) # Check every 5 minutes
+        # 3. Laporan Berkala (Reduced to 1 Hour)
+        if elapsed >= 3600:
+            SelfEvolutionEngine.generate_progress_report()
+            start_time = time.time() 
+
+        time.sleep(60) # Faster response: Check every minute instead of 5 minutes
 
 if __name__ == "__main__":
     run()

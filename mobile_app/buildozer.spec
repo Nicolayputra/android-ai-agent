@@ -1,10 +1,10 @@
 [app]
 
 # --- Identitas Aplikasi ---
-title = Noir Sovereign Core
+title = Noir Sovereign v13
 package.name = noirsmc
 package.domain = org.antigravity
-version = 11.0.0
+version = 13.0.0
 
 # --- Sumber Kode ---
 source.dir = .
@@ -13,7 +13,7 @@ source.exclude_dirs = tests, bin, .buildozer
 
 # --- Dependensi Python ---
 # Hanya dependensi yang PASTI ada di python-for-android recipes
-requirements = python3,kivy==2.3.0,requests,urllib3,certifi,idna,charset-normalizer
+requirements = python3,kivy==2.3.0,requests,urllib3,certifi,idna,charset-normalizer,pyjnius
 
 # --- Target Platform ---
 android.api = 34
@@ -24,7 +24,7 @@ android.accept_sdk_license = True
 android.archs = arm64-v8a
 
 # --- Izin Sistem (Sovereign Control) ---
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,FOREGROUND_SERVICE,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECEIVE_BOOT_COMPLETED,SYSTEM_ALERT_WINDOW
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,FOREGROUND_SERVICE,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECEIVE_BOOT_COMPLETED,SYSTEM_ALERT_WINDOW,VIBRATE,POST_NOTIFICATIONS
 
 # --- Orientasi ---
 orientation = portrait
