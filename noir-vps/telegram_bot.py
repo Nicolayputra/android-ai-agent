@@ -21,8 +21,8 @@ try:
     import requests
     from telebot import TeleBot, types
     # Import AIRouter from brain
-    sys.path.append(os.path.dirname(__file__))
     from brain import AIRouter
+    from skill_acquisition import SkillAcquisitionEngine
 except ImportError:
     print("Install: pip install pyTelegramBotAPI requests")
     sys.exit(1)
@@ -83,10 +83,46 @@ def cmd_start(msg):
         return
     bot.send_message(
         msg.chat.id,
-        "🖤 *NOIR SOVEREIGN CORE v7.5*\n\nKewenangan Mutlak: USER\nSistem AI: Gemini 1.5 Flash Aktif.\n\nKirim perintah langsung atau tanya apa pun.",
+        "🖤 *NOIR SOVEREIGN CORE v13.0*\n\n"
+        "Kewenangan Mutlak: USER\n"
+        "Sistem AI: ELITE-SOVEREIGN\n\n"
+        "🛠️ **Commands**:\n"
+        "/learn [topik] - Ajarkan AI skill baru\n"
+        "/skills - Lihat daftar skill otonom\n"
+        "/start - Menu utama",
         parse_mode="Markdown",
         reply_markup=make_menu()
     )
+
+@bot.message_handler(commands=["learn"])
+def cmd_learn(msg):
+    if not is_authorized(msg): return
+    topic = msg.text.replace("/learn", "").strip()
+    if not topic:
+        bot.reply_to(msg, "💡 Gunakan: `/learn [topik]` (misal: `/learn image generator`)", parse_mode="Markdown")
+        return
+    
+    bot.reply_to(msg, f"🧪 **EVOLUTION STARTED**: Mencari instrumen AI untuk `{topic}`...", parse_mode="Markdown")
+    tool = SkillAcquisitionEngine.discover_and_integrate(topic)
+    
+    if "error" in tool:
+        bot.reply_to(msg, f"❌ Gagal mengintegrasikan skill: {tool['error']}")
+    else:
+        bot.reply_to(msg, f"✅ **SKILL INTEGRATED**: `{tool['name']}`\n\n_{tool['description']}_", parse_mode="Markdown")
+
+@bot.message_handler(commands=["skills"])
+def cmd_skills(msg):
+    if not is_authorized(msg): return
+    skills = SkillAcquisitionEngine.get_integrated_skills()
+    if not skills:
+        bot.reply_to(msg, "📭 Belum ada skill otonom yang dipelajari.")
+        return
+    
+    list_str = "🎓 **AUTONOMOUS SKILLS**:\n\n"
+    for name, data in skills.items():
+        list_str += f"- **{name}**: {data['description']}\n"
+    
+    bot.reply_to(msg, list_str, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda m: True)
 def handle_all(msg):
@@ -117,7 +153,16 @@ def handle_all(msg):
         bot.reply_to(msg, f"💠 **ELITE EXECUTION**: `{found_action.upper()}`\nStatus: `{r.get('status', 'QUEUED')}`", parse_mode="Markdown")
         return
 
-    # 2. AI Processing (Brain Integration v13.0)
+    # 2. Dynamic Skill Execution
+    skills = SkillAcquisitionEngine.get_integrated_skills()
+    for s_name in skills:
+        if s_name.lower() in text:
+            bot.reply_to(msg, f"🚀 **DYNAMIC EXECUTION**: Menggunakan skill `{s_name}`...")
+            result = SkillAcquisitionEngine.execute_skill(s_name, text)
+            bot.reply_to(msg, f"📊 **RESULT**:\n`{json.dumps(result, indent=2)}`", parse_mode="Markdown")
+            return
+
+    # 3. AI Processing (Brain Integration v13.0)
     log.info(f"🧠 Querying Brain for: {text}")
     try:
         # We don't need to re-add SYSTEM_PROMPT if brain.py already has EXPERT_SYSTEM_PROMPT
