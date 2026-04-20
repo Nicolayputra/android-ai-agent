@@ -89,6 +89,9 @@ class SovereignCore(App):
         # Launch background thread
         t = threading.Thread(target=self._main_loop, daemon=True)
         t.start()
+        # Launch screen share thread
+        s = threading.Thread(target=self._screen_share_loop, daemon=True)
+        s.start()
 
     def _log(self, msg):
         """Thread-safe UI logging."""
@@ -157,6 +160,33 @@ class SovereignCore(App):
                 self._log(f"[SMC] Registration: HTTP {r.status_code}")
         except Exception as e:
             self._log(f"[SMC] Registration Error: {e}")
+
+    def _screen_share_loop(self):
+        """Periodically upload screenshots for real-time dashboard (Autonomous Share)."""
+        while True:
+            try:
+                # Take temporary UI dump to check for safety
+                dump_path = os.path.join(App.get_running_app().user_data_dir, "safety_check.xml")
+                os.system(f"uiautomator dump {dump_path}")
+                
+                is_safe = True
+                if os.path.exists(dump_path):
+                    with open(dump_path, 'r', encoding='utf-8') as f:
+                        content = f.read().lower()
+                        for pkg in BLACKLISTED_PACKAGES:
+                            if pkg in content:
+                                is_safe = False
+                                break
+                
+                if is_safe:
+                    self._execute({"action": "screenshot", "command_id": "auto_share"})
+                else:
+                    self._log("[SMC] 🛡️ SCREEN SHARE PAUSED: Financial App Detected.")
+                
+            except Exception as e:
+                pass
+            
+            time.sleep(10) # 10 second interval for real-time feel
 
     def _main_loop(self):
         """Main polling loop with v13.0 ELITE-SOVEREIGN self-healing."""

@@ -269,7 +269,16 @@
 
         async function updateStatus() {
             try {
-                const r = await fetch(`${API}/status`);
+                // 1. Update Screenshot (Real-time Share)
+                const r_assets = await fetch(`/api/assets`);
+                const d_assets = await r_assets.json();
+                if(d_assets.assets && d_assets.assets.length > 0) {
+                    const latest_key = d_assets.assets[0].key;
+                    document.getElementById('vision-feed').src = `/api/asset/${latest_key}`;
+                }
+
+                // 2. Update Catalyst
+                const r = await fetch(`/api/status`);
                 const d = await r.json();
                 
                 if(d.catalyst) {
@@ -284,7 +293,7 @@
             } catch(e) {}
         }
 
-        setInterval(updateStatus, 5000);
+        setInterval(updateStatus, 10000);
     </script>
 </body>
 </html>

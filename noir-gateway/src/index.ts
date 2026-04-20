@@ -41,6 +41,22 @@ const auth = (c: any): boolean => {
 const unauthorized = (c: any) =>
   c.json({ error: 'Unauthorized. Noir Agent: Sovereign Authority Required.' }, 401);
 
+// ─── ADMIN: MIGRATION (Emergency Schema Fix) ───
+app.get('/admin/migrate', async (c) => {
+  if (!auth(c)) return unauthorized(c);
+  try {
+    // 1. Add stats column to agents
+    await c.env.DB.prepare(`ALTER TABLE agents ADD COLUMN stats TEXT`).run();
+  } catch (e) {}
+  
+  try {
+    // 2. Add last_screenshot column if missing
+    await c.env.DB.prepare(`ALTER TABLE agents ADD COLUMN last_screenshot TEXT`).run();
+  } catch (e) {}
+
+  return c.json({ status: 'migration_attempted', ts: new Date().toISOString() });
+});
+
 // ─── PUBLIC: HEALTH CHECK ───
 app.get('/health', (c) =>
   c.json({

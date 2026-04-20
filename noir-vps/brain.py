@@ -223,12 +223,30 @@ class AIRouter:
         full_prompt = f"{EXPERT_SYSTEM_PROMPT}\n\nUSER QUERY: {prompt}"
         try:
             import requests
+            # Loosen safety filters for sovereign control
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+            ]
+            
             r = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI}",
-                json={"contents": [{"parts": [{"text": full_prompt}]}]},
+                json={
+                    "contents": [{"parts": [{"text": full_prompt}]}],
+                    "safetySettings": safety_settings
+                },
                 timeout=30
             )
-            return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+            data = r.json()
+            if "candidates" in data and len(data["candidates"]) > 0:
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+            else:
+                # Handle safety blocking or other issues
+                if "promptFeedback" in data and "blockReason" in data["promptFeedback"]:
+                    return f"[Gemini Blocked] Reason: {data['promptFeedback']['blockReason']}"
+                return f"[Gemini Error] No candidates found. Raw: {json.dumps(data)[:200]}"
         except Exception as e:
             return f"[Gemini Error] {e}"
 
@@ -335,11 +353,21 @@ class VisionEngine:
                             {"text": prompt},
                             {"inline_data": {"mime_type": "image/png", "data": img_data}}
                         ]
-                    }]
+                    }],
+                    "safetySettings": [
+                        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+                    ]
                 },
                 timeout=30
             )
-            return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+            data = r.json()
+            if "candidates" in data and len(data["candidates"]) > 0:
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+            else:
+                return f"[Vision Error] Model refused or failed. Reason: {data.get('promptFeedback', {}).get('blockReason', 'Unknown')}"
         except Exception as e:
             return f"[Vision Error] {e}"
 
