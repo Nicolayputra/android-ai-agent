@@ -1,4 +1,4 @@
-# NOIR AGENT v6 — VPS Requirements
+# NOIR AGENT v13.0 ELITE-SOVEREIGN — VPS Requirements
 # Core (selalu aktif)
 requests>=2.31.0
 python-dotenv>=1.0.0
@@ -20,4 +20,3 @@ beautifulsoup4>=4.12.0
 
 # Sandbox & DevOps
 docker>=6.1.0
-python-dotenv>=1.0.0
