@@ -24,6 +24,7 @@ try:
     from brain import AIRouter
     from skill_acquisition import SkillAcquisitionEngine
     from linguistic_learning import LinguisticMastery
+    from nlu_processor import NLUProcessor
 except ImportError:
     print("Install: pip install pyTelegramBotAPI requests")
     sys.exit(1)
@@ -142,10 +143,17 @@ def handle_all(msg):
         bot.reply_to(msg, "⛔ Akses ditolak.")
         return
 
-    text = msg.text.strip().lower()
+    raw_text = msg.text.strip()
     bot.send_chat_action(msg.chat.id, "typing")
 
-    # 1. Rule-Based Intent Mapping (Instant & Zero Token Cost)
+    # 0. NLU Normalization (Elite Sovereign NLU)
+    nlu_result = NLUProcessor.normalize_input(raw_text)
+    text = nlu_result["normalized"].lower()
+    intent = nlu_result["intent"]
+    
+    log.info(f"✨ NLU Normalized: {raw_text} -> {text} (Intent: {intent})")
+
+    # 1. Rule-Based Intent Mapping (Using Normalized Text)
     mapping = {
         "screenshot": "screenshot", "foto": "screenshot", "ss": "screenshot", "layar": "screenshot",
         "battery": "battery", "baterai": "battery", "power": "battery", "persen": "battery",
@@ -174,12 +182,16 @@ def handle_all(msg):
             bot.reply_to(msg, f"📊 **RESULT**:\n`{json.dumps(result, indent=2)}`", parse_mode="Markdown")
             return
 
-    # 3. AI Processing (Brain Integration v13.0)
+    # 3. AI Processing (Brain Integration v13.0 with NLU Context)
     log.info(f"🧠 Querying Brain for: {text}")
     try:
-        # We don't need to re-add SYSTEM_PROMPT if brain.py already has EXPERT_SYSTEM_PROMPT
-        # But we want to ensure the tags are used.
-        ai_resp = AIRouter.smart_query(f"USER COMMAND: {text}\n\nINSTRUCTION: Respond in Indonesian as Noir Sovereign. Use [ACTION:type] if needed.")
+        # Pass normalized context to Brain
+        ai_resp = AIRouter.smart_query(
+            f"USER INPUT (Normalized): {text}\n"
+            f"INTENT: {intent}\n"
+            f"ENTITIES: {json.dumps(nlu_result['entities'])}\n\n"
+            f"INSTRUCTION: Respond in Indonesian as Noir Sovereign. Be efficient."
+        )
         
         # Check for Actions in AI Response
         actions_found = re.findall(r'\[ACTION:(.*?)\]', ai_resp)

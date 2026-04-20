@@ -27,6 +27,7 @@ GROQ     = os.environ.get("GROQ_API_KEY", "")
 TG_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TG_ID    = os.environ.get("TELEGRAM_CHAT_ID", "")
 
+os.makedirs("../logs", exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [BRAIN] %(message)s",

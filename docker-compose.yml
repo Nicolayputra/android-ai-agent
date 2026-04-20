@@ -32,6 +32,8 @@ services:
     restart: always
     env_file: .env
     command: python telegram_bot.py
+    volumes:
+      - ./logs:/app/logs
     networks:
       - noir-net
 
