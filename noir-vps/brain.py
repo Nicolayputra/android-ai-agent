@@ -219,7 +219,7 @@ class AIRouter:
     """Routes queries to the best available free AI model."""
 
     @staticmethod
-    def query_gemini(prompt: str) -> str:
+    def query_gemini(prompt: str, image_base64: str = None) -> str:
         if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
         full_prompt = f"{EXPERT_SYSTEM_PROMPT}\n\nUSER QUERY: {prompt}"
         try:
@@ -232,10 +232,14 @@ class AIRouter:
                 {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
             ]
             
+            parts = [{"text": full_prompt}]
+            if image_base64:
+                parts.append({"inline_data": {"mime_type": "image/png", "data": image_base64}})
+            
             r = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI}",
                 json={
-                    "contents": [{"parts": [{"text": full_prompt}]}],
+                    "contents": [{"parts": parts}],
                     "safetySettings": safety_settings
                 },
                 timeout=30

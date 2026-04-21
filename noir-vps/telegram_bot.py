@@ -145,6 +145,26 @@ def cmd_absorb(msg):
     else:
         bot.reply_to(msg, f"✅ **ABSORPTION COMPLETE**: {len(patterns)} pola bahasa manusia telah diserap ke dalam memori kognitif Noir.", parse_mode="Markdown")
 
+@bot.message_handler(content_types=['photo'])
+def handle_photo(msg):
+    if not is_authorized(msg): return
+    bot.reply_to(msg, "👁️ **VISION INTELLIGENCE**: Menganalisis elemen visual...", parse_mode="Markdown")
+    try:
+        file_info = bot.get_file(msg.photo[-1].file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        with open("../logs/temp_vision.png", "wb") as new_file:
+            new_file.write(downloaded_file)
+        
+        # Import dynamically to avoid circular issues
+        import sys
+        sys.path.append(os.path.dirname(__file__))
+        from vision_analyzer import ScreenVisionIntelligence
+        
+        result = ScreenVisionIntelligence.analyze_screen("../logs/temp_vision.png")
+        bot.reply_to(msg, f"📊 **ANALISIS VISUAL**:\n`{json.dumps(result, indent=2)}`", parse_mode="Markdown")
+    except Exception as e:
+        bot.reply_to(msg, f"❌ Vision Error: {e}")
+
 @bot.message_handler(func=lambda m: True)
 def handle_all(msg):
     if not is_authorized(msg):

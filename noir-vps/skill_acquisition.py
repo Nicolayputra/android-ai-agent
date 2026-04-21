@@ -77,7 +77,7 @@ class SkillAcquisitionEngine:
             if tool["method"] == "POST":
                 # AI menyusun payload berdasarkan user_input dan contoh usage
                 payload_prompt = f"Berdasarkan input '{user_input}', susunlah payload JSON untuk API ini: {json.dumps(tool)}. Berikan HANYA JSON."
-                payload_str = AIRouter.query_qwen(payload_prompt).strip().replace("```json", "").replace("```", "")
+                payload_str = AIRouter.query_gemini(payload_prompt).strip().replace("```json", "").replace("```", "")
                 payload = json.loads(payload_str)
                 
                 resp = requests.post(tool["endpoint"], json=payload, timeout=15)

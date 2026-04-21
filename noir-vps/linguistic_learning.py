@@ -25,8 +25,8 @@ class LinguisticMastery:
         Format the result as a JSON dictionary of patterns.
         """
         
-        # We use DeepSeek for reasoning and Gemini for final synthesis
-        raw_analysis = AIRouter.query_deepseek(mission)
+        # We use Gemini for reasoning and synthesis
+        raw_analysis = AIRouter.query_gemini(mission)
         synthesis = AIRouter.query_gemini(f"Extract these patterns into a structured JSON for an AI agent: {raw_analysis}")
         
         try:
