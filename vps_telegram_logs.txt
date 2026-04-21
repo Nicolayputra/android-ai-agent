@@ -1,0 +1,6 @@
+2026-04-21 01:02:37,716 [BRAIN] 🚀 Sovereign Catalyst initialized. Absorption engine standing by.
+2026-04-21 01:02:37,743 [BRAIN] 🖤 Noir Sovereign Telegram Bot — Starting...
+2026-04-21 01:02:40,259 [BRAIN] 🧠 NLU: Normalizing input -> ya
+2026-04-21 01:02:40,382 [BRAIN] NLU Normalization Failed: Expecting value: line 1 column 2 (char 1)
+2026-04-21 01:02:40,382 [BRAIN] ✨ NLU Normalized: ya -> ya (Intent: UNKNOWN)
+2026-04-21 01:02:40,382 [BRAIN] 🧠 Querying Brain for: ya

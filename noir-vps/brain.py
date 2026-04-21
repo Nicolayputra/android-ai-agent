@@ -22,6 +22,7 @@ GEMINI   = os.environ.get("GEMINI_API_KEY", "")
 GROQ     = os.environ.get("GROQ_API_KEY", "")
 TG_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TG_ID    = os.environ.get("TELEGRAM_CHAT_ID", "")
+DEVICE_ID= os.environ.get("NOIR_DEVICE_ID", "REDMI_NOTE_14")
 
 os.makedirs("../logs", exist_ok=True)
 from logging.handlers import RotatingFileHandler

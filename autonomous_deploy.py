@@ -9,18 +9,11 @@ ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.connect(VPS_IP, username=VPS_USER, password=VPS_PASS)
 
-print("[2] Uploading archive...")
-sftp = ssh.open_sftp()
-sftp.put("project.tar.gz", "/root/project.tar.gz")
-sftp.close()
-
-print("[3] Executing deployment...")
+print("[2] Executing Git deployment...")
 commands = [
-    "mkdir -p /root/noir-agent",
-    "tar -xzf /root/project.tar.gz -C /root/noir-agent",
-    "rm /root/project.tar.gz",
     "fuser -k 80/tcp || true",
     "cd /root/noir-agent && docker-compose down || true",
+    "cd /root/noir-agent && git fetch --all && git reset --hard origin/main",
     "cd /root/noir-agent && docker-compose up -d --build"
 ]
 

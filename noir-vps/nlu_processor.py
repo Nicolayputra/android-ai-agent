@@ -39,8 +39,8 @@ class NLUProcessor:
         """
         
         try:
-            # Menggunakan Qwen karena sangat cepat dan akurat untuk instruksi terstruktur
-            response = AIRouter.query_qwen(prompt)
+            # Menggunakan Gemini karena API key tersedia
+            response = AIRouter.query_gemini(prompt)
             clean_json = response.strip().replace("```json", "").replace("```", "")
             result = json.loads(clean_json)
             result["original"] = text
@@ -61,5 +61,5 @@ class NLUProcessor:
         """Mengekstrak pola struktur kalimat untuk pembelajaran otonom."""
         # Contoh: "Tolong nyalakan lampu" -> "ACTION_REQUEST(verb=nyalakan, target=lampu)"
         prompt = f"Analyze the grammatical structure of this normalized sentence and return a pattern template: '{normalized_text}'"
-        pattern = AIRouter.query_qwen(prompt)
+        pattern = AIRouter.query_gemini(prompt)
         return pattern
