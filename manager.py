@@ -45,6 +45,19 @@ class NoirManager:
         except Exception as e:
             print(f"[ERROR] Gateway deploy failed: {e}")
 
+    def reset_telegram(self):
+        print("[PROCESS] FORCING TELEGRAM SERVICE RESET...")
+        try:
+            # Kill standalone
+            subprocess.run(self.ssh_base + ["pkill -f telegram_bot.py || true"])
+            # Remove cache
+            subprocess.run(self.ssh_base + [f"cd {self.remote_path} && find . -type d -name '__pycache__' -exec rm -rf {{}} +"])
+            # Force rebuild specific service
+            subprocess.run(self.ssh_base + [f"cd {self.remote_path} && docker-compose up -d --build --force-recreate noir-telegram"], check=True)
+            print("[SUCCESS] Telegram Service Refresh Complete.")
+        except Exception as e:
+            print(f"[ERROR] Telegram reset failed: {e}")
+
     def health_check(self):
         print("[PROCESS] Running Diagnostics...")
         subprocess.run(self.ssh_base + ["docker ps"])
@@ -58,5 +71,6 @@ if __name__ == "__main__":
         elif cmd == "gateway": manager.gateway_deploy()
         elif cmd == "check": manager.health_check()
         elif cmd == "clean": manager.clean_vps()
+        elif cmd == "reset-tg": manager.reset_telegram()
     else:
         print("Usage: python manager.py [deploy|gateway|check|clean]")

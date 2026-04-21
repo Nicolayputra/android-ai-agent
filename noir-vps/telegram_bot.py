@@ -53,6 +53,9 @@ logging.basicConfig(
 log = logging.getLogger("NoirTelegramBot")
 
 bot = TeleBot(BOT_TOKEN)
+log.info(f"🖤 Noir Sovereign Telegram Bot — Starting...")
+log.info(f"✅ Bot initialized. Target Chat ID: {CHAT_ID}")
+log.info(f"🔗 Gateway Link: {GATEWAY}")
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
 SYSTEM_PROMPT = """

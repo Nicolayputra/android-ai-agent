@@ -78,6 +78,10 @@ app.post('/agent/upload', async (c) => {
   });
   
   await c.env.DB.prepare(
+    "INSERT OR IGNORE INTO agents (device_id, name) VALUES (?, 'Agent')"
+  ).bind(device_id).run();
+
+  await c.env.DB.prepare(
     'UPDATE agents SET last_screenshot = ? WHERE device_id = ?'
   ).bind(key, device_id).run();
   

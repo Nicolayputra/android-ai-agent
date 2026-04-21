@@ -312,8 +312,41 @@ class AIRouter:
 
     @staticmethod
     def query_qwen(prompt: str) -> str:
-        """Single Standard Enforcement: Rerouted to Gemini"""
-        return AIRouter.query_gemini(prompt)
+        """Qwen-2.5 Coding Expert via OpenRouter."""
+        if not os.environ.get("OPENROUTER_API_KEY"): return AIRouter.query_gemini(prompt)
+        log.info("💻 Coding: Querying Qwen-2.5 via OpenRouter...")
+        try:
+            import requests
+            r = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={"Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}", "Content-Type": "application/json"},
+                json={
+                    "model": "qwen/qwen-2-72b-instruct",
+                    "messages": [{"role": "system", "content": EXPERT_SYSTEM_PROMPT}, {"role": "user", "content": prompt}]
+                },
+                timeout=30
+            )
+            return r.json()["choices"][0]["message"]["content"]
+        except: return AIRouter.query_gemini(prompt)
+
+    @staticmethod
+    def query_llama(prompt: str) -> str:
+        """Llama 3.3 General Intelligence via OpenRouter."""
+        if not os.environ.get("OPENROUTER_API_KEY"): return AIRouter.query_gemini(prompt)
+        log.info("🦙 General: Querying Llama 3.3 via OpenRouter...")
+        try:
+            import requests
+            r = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={"Authorization": f"Bearer {os.environ.get('OPENROUTER_API_KEY')}", "Content-Type": "application/json"},
+                json={
+                    "model": "meta-llama/llama-3.3-70b-instruct",
+                    "messages": [{"role": "system", "content": EXPERT_SYSTEM_PROMPT}, {"role": "user", "content": prompt}]
+                },
+                timeout=30
+            )
+            return r.json()["choices"][0]["message"]["content"]
+        except: return AIRouter.query_gemini(prompt)
 
     @staticmethod
     def smart_query(prompt: str) -> str:
