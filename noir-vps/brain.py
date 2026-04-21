@@ -208,44 +208,64 @@ class AIRouter:
     @staticmethod
     def query_gemini(prompt: str, image_base64: str = None, response_json: bool = False) -> str:
         if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
-        try:
-            import requests
-            # Loosen safety filters for sovereign control
-            safety_settings = [
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
-            ]
+        
+        # STANDAR OTONOM: Model Rotation & Exponential Backoff
+        models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
+        
+        import requests, time
+        
+        for model_name in models:
+            for attempt in range(2): # 2 retries per model
+                try:
+                    safety_settings = [
+                        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+                    ]
+                    
+                    parts = [{"text": prompt}]
+                    if image_base64:
+                        parts.append({"inline_data": {"mime_type": "image/png", "data": image_base64}})
+                    
+                    payload = {
+                        "system_instruction": {"parts": [{"text": EXPERT_SYSTEM_PROMPT}]},
+                        "contents": [{"role": "user", "parts": parts}],
+                        "safetySettings": safety_settings
+                    }
+                    
+                    if response_json:
+                        payload["generationConfig"] = {"responseMimeType": "application/json"}
+                    
+                    r = requests.post(
+                        f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI}",
+                        json=payload,
+                        timeout=30
+                    )
+                    data = r.json()
+                    
+                    # Handle Quota 429
+                    if "error" in data:
+                        if data["error"]["code"] == 429:
+                            log.warning(f"⚠️ QUOTA EXCEEDED ({model_name}). Retrying in {2**(attempt+1)}s...")
+                            time.sleep(2**(attempt+1))
+                            continue
+                        return f"[Gemini Error] {data['error']['message']}"
+                    
+                    if "candidates" in data and len(data["candidates"]) > 0:
+                        return data["candidates"][0]["content"]["parts"][0]["text"]
+                    else:
+                        if "promptFeedback" in data and "blockReason" in data["promptFeedback"]:
+                            return f"[Gemini Blocked] Reason: {data['promptFeedback']['blockReason']}"
+                        return f"[Gemini Error] No candidates found."
+                        
+                except Exception as e:
+                    log.error(f"Gemini Request failed: {e}")
+                    time.sleep(1)
             
-            parts = [{"text": prompt}]
-            if image_base64:
-                parts.append({"inline_data": {"mime_type": "image/png", "data": image_base64}})
+            log.info(f"🔄 Rotating to next model due to {model_name} quota...")
             
-            payload = {
-                "system_instruction": {"parts": [{"text": EXPERT_SYSTEM_PROMPT}]},
-                "contents": [{"role": "user", "parts": parts}],
-                "safetySettings": safety_settings
-            }
-            
-            if response_json:
-                payload["generationConfig"] = {"responseMimeType": "application/json"}
-            
-            # Upgraded to Gemini 2.0 Flash (Latest, Free, Native JSON/Tools support)
-            r = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI}",
-                json=payload,
-                timeout=30
-            )
-            data = r.json()
-            if "candidates" in data and len(data["candidates"]) > 0:
-                return data["candidates"][0]["content"]["parts"][0]["text"]
-            else:
-                if "promptFeedback" in data and "blockReason" in data["promptFeedback"]:
-                    return f"[Gemini Blocked] Reason: {data['promptFeedback']['blockReason']}"
-                return f"[Gemini Error] No candidates found. Raw: {json.dumps(data)[:200]}"
-        except Exception as e:
-            return f"[Gemini Error] {e}"
+        return "🚨 [CRITICAL] Seluruh kuota model Gemini gratis telah terlampaui. Silakan coba lagi dalam 1 menit."
 
     @staticmethod
     def query_groq(prompt: str, model: str = "") -> str:
