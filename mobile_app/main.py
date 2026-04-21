@@ -288,9 +288,18 @@ class SovereignCore(App):
 
             elif atype in ("screenshot", "capture"):
                 # Use internal storage to avoid /sdcard permission issues on Android 14
-                path = os.path.join(App.get_running_app().user_data_dir, "noir_vision.png")
-                self._run_shell(f"screencap -p {path}")
-                time.sleep(1.0) # Wait for file to write
+                parent = App.get_running_app().user_data_dir
+                if not os.path.exists(parent):
+                    os.makedirs(parent, exist_ok=True)
+                path = os.path.join(parent, "noir_vision.png")
+                
+                # Take screenshot via Shizuku-enabled shell
+                res = self._run_shell(f"screencap -p {path}")
+                if not res["success"]:
+                    result = {"success": False, "error": f"Screencap Error: {res.get('output', 'Unknown error')}"}
+                    return # Exit this block
+                
+                time.sleep(1.2) # Wait for file to fully write
 
                 with open(path, 'rb') as f:
                     r = requests.post(
@@ -308,9 +317,12 @@ class SovereignCore(App):
                     result = {"success": False, "error": f"Upload failed: {r.status_code}"}
 
             elif atype == "ui_dump":
-                path = os.path.join(App.get_running_app().user_data_dir, "view_hierarchy.xml")
-                os.system(f"uiautomator dump {path}")
-                time.sleep(1.0)
+                parent = App.get_running_app().user_data_dir
+                if not os.path.exists(parent):
+                    os.makedirs(parent, exist_ok=True)
+                path = os.path.join(parent, "view_hierarchy.xml")
+                self._run_shell(f"uiautomator dump {path}")
+                time.sleep(1.5)
                 with open(path, 'r', encoding='utf-8') as f:
                     xml_content = f.read()
                 result = {"success": True, "output": xml_content}
@@ -389,14 +401,23 @@ class SovereignCore(App):
             self._log(f"[SMC] Result delivery failed: {e}")
 
     def _run_shell(self, cmd, timeout=10):
-        """Intelligent shell execution supporting Shizuku."""
+        """Intelligent shell execution supporting Shizuku (rish)."""
         import subprocess
-        # Auto-detect Shizuku (rish)
-        is_shizuku = os.system("which rish > /dev/null 2>&1") == 0
-        final_cmd = f"rish -c '{cmd}'" if is_shizuku else cmd
+        # Standard paths for Shizuku/rish on Android
+        rish_paths = ["/system/bin/rish", "/data/local/tmp/rish", "rish"]
+        rish_bin = "sh"
+        
+        # Check for rish availability
+        for p in rish_paths:
+            check = subprocess.run(f"command -v {p}", shell=True, capture_output=True, text=True)
+            if check.returncode == 0:
+                rish_bin = p
+                break
+        
+        final_cmd = f"{rish_bin} -c \"{cmd}\"" if "rish" in rish_bin else cmd
         try:
             r = subprocess.run(final_cmd, shell=True, capture_output=True, text=True, timeout=timeout)
-            return {"success": r.returncode == 0, "output": r.stdout.strip() + r.stderr.strip()}
+            return {"success": r.returncode == 0, "output": (r.stdout + r.stderr).strip()}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
