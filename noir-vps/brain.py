@@ -106,18 +106,10 @@ class PhasedLearning:
 
     @staticmethod
     def get_consensus(prompt: str):
-        """Ambil pendapat dari semua model AI secara simultan."""
-        log.info(f"🤝 Generating Consensus for: {prompt}")
-        opinions = {
-            "gemini": AIRouter.query_gemini(prompt),
-            "deepseek": AIRouter.query_deepseek(prompt),
-            "qwen": AIRouter.query_qwen(prompt)
-        }
-        
-        # Sintesis otomatis untuk aksi otonom
-        synthesis = AIRouter.query_gemini(f"Berdasarkan 3 pendapat ini, tentukan 1 perintah JSON final untuk HP: {json.dumps(opinions)}")
-        
-        return opinions, synthesis
+        """Single Standard Enforcement: Resolusi langsung via Gemini."""
+        log.info(f"🤝 Standard Resolution for: {prompt}")
+        opinion = AIRouter.query_gemini(prompt)
+        return {"gemini": opinion}, opinion
 
     @staticmethod
     def send_telegram(msg: str):
@@ -198,13 +190,8 @@ class InterAICollaboration:
     """Kolaborasi antar model AI untuk hasil terbaik (Distillation)."""
     @staticmethod
     def distill(prompt: str):
-        log.info("🤝 Inter-AI Collaboration: Distilling answer...")
-        ans_deepseek = AIRouter.query_deepseek(prompt)
-        ans_qwen = AIRouter.query_qwen(prompt)
-        
-        # Cross-reference
-        distill_prompt = f"Analyze these two AI answers and provide the 'Perfect Synthesis':\n1. {ans_deepseek}\n2. {ans_qwen}"
-        return AIRouter.query_gemini(distill_prompt)
+        log.info("🤝 Single Standard Inference: Distilling answer via Gemini...")
+        return AIRouter.query_gemini(prompt)
 
 class SandboxManager:
     """Uji fitur baru di Docker sandbox agar aman."""
@@ -256,48 +243,29 @@ class AIRouter:
             return f"[Gemini Error] {e}"
 
     @staticmethod
-    def query_groq(prompt: str, model: str = "llama-3.3-70b-versatile") -> str:
-        if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
-        try:
-            import requests
-            r = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ}", "Content-Type": "application/json"},
-                json={
-                    "model": model, 
-                    "messages": [
-                        {"role": "system", "content": EXPERT_SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt}
-                    ]
-                },
-                timeout=30
-            )
-            return r.json()["choices"][0]["message"]["content"]
-        except Exception as e:
-            return f"[Groq Error] {e}"
+    def query_groq(prompt: str, model: str = "") -> str:
+        # SINGLE STANDARD ENFORCEMENT: Redirect to Gemini
+        return AIRouter.query_gemini(prompt)
 
     @staticmethod
     def auto_correct(failed_cmd: dict, error_msg: str) -> dict:
         """Menganalisis kegagalan dan mencoba memperbaiki perintah."""
         prompt = f"Failed Command: {json.dumps(failed_cmd)}\nError: {error_msg}\nOptimize this for retry. Return only JSON."
-        correction = AIRouter.query_qwen(prompt) # Qwen is best for JSON/Precise fix
+        correction = AIRouter.query_gemini(prompt)
         try:
             return json.loads(correction)
         except:
-            return failed_cmd # Fallback to original if correction fails
-
-
+            return failed_cmd
 
     @staticmethod
     def query_deepseek(prompt: str) -> str:
-        """Menggunakan DeepSeek-R1 (Distill) via Groq (Free)."""
-        return AIRouter.query_groq(prompt, model="deepseek-r1-distill-llama-70b")
+        """Single Standard Enforcement: Rerouted to Gemini"""
+        return AIRouter.query_gemini(prompt)
 
     @staticmethod
     def query_qwen(prompt: str) -> str:
-        """Menggunakan Qwen-2.5 Coder via Groq (Free)."""
-        if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
-        return AIRouter.query_groq(prompt, model="qwen-2.5-coder-32b")
+        """Single Standard Enforcement: Rerouted to Gemini"""
+        return AIRouter.query_gemini(prompt)
 
     @staticmethod
     def smart_query(prompt: str) -> str:
