@@ -38,6 +38,14 @@ def api_status():
     except Exception as e:
         return {"error": str(e), "online": False}
 
+@app.get("/api/logs")
+def api_logs(device_id: str = "REDMI_NOTE_14"):
+    try:
+        r = requests.get(f"{CF_GATEWAY}/agent/logs?device_id={device_id}", headers=CF_HEADERS, timeout=10)
+        return r.json()
+    except Exception as e:
+        return []
+
 @app.post("/api/command")
 async def api_command(request: Request):
     try:

@@ -30,7 +30,7 @@ app.post('/agent/register', async (c) => {
   const data = await c.req.json();
   const { device_id, agent, stats } = data;
   await c.env.DB.prepare(
-    'INSERT OR REPLACE INTO agents (device_id, name, last_seen, stats) VALUES (?, ?, CURRENT_TIMESTAMP, ?)'
+    "INSERT INTO agents (device_id, name, last_seen, stats) VALUES (?, ?, datetime('now'), ?) ON CONFLICT(device_id) DO UPDATE SET name=excluded.name, last_seen=excluded.last_seen, stats=excluded.stats"
   ).bind(device_id, agent, JSON.stringify(stats)).run();
   return c.json({ status: 'ok' });
 });
@@ -88,10 +88,12 @@ app.post('/agent/upload', async (c) => {
 
 app.get('/agent/summary', async (c) => {
   const agents = await c.env.DB.prepare('SELECT * FROM agents ORDER BY last_seen DESC').all();
-  const commands = await c.env.DB.prepare('SELECT id, description, status, updated_at FROM commands ORDER BY updated_at DESC LIMIT 10').all();
+  const commands = await c.env.DB.prepare('SELECT id, description, status, result, updated_at FROM commands ORDER BY updated_at DESC LIMIT 10').all();
   
-  const agent = agents.results[0] || null;
-  const is_online = agent ? (Date.now() - new Date(agent.last_seen as string).getTime() < 60000) : false;
+  const agent = agents.results[0] as any || null;
+  // Use Unix timestamps for reliable online check
+  const last_seen_unix = agent ? new Date(agent.last_seen + 'Z').getTime() : 0;
+  const is_online = agent ? (Date.now() - last_seen_unix < 60000) : false;
 
   return c.json({
     online: is_online,
@@ -122,11 +124,24 @@ app.get('/agent/asset/:key', async (c) => {
   return new Response(object.body, { headers });
 });
 
+app.get('/agent/logs', async (c) => {
+  const device_id = c.req.query('device_id');
+  const logs = await c.env.DB.prepare(
+    "SELECT * FROM logs WHERE device_id = ? ORDER BY created_at DESC LIMIT 50"
+  ).bind(device_id).all();
+  return c.json(logs.results);
+});
+
 app.post('/agent/log', async (c) => {
   const data = await c.req.json();
   const { device_id, level, message } = data;
-  console.log(`[${device_id}] [${level}] ${message}`);
-  // We can store logs in a separate D1 table if needed, but for now console is enough for wrangler logs
+  await c.env.DB.prepare(
+    "INSERT INTO logs (device_id, level, message) VALUES (?, ?, ?)"
+  ).bind(device_id, level, message).run().catch(async () => {
+    // Auto-create table if missing
+    await c.env.DB.prepare("CREATE TABLE IF NOT EXISTS logs (device_id TEXT, level TEXT, message TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)").run();
+    await c.env.DB.prepare("INSERT INTO logs (device_id, level, message) VALUES (?, ?, ?)").bind(device_id, level, message).run();
+  });
   return c.json({ ok: true });
 });
 

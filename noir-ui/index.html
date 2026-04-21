@@ -339,14 +339,25 @@
         }
 
         async function executeCmd(type, params={}) {
+            // Visual Pulse: Provide instant feedback
+            const term = document.getElementById('log-terminal');
+            if(term) {
+                const d = document.createElement('div');
+                d.style.color = '#aaa';
+                d.innerText = `> SENDING: ${type.toUpperCase()}...`;
+                term.prepend(d);
+            }
+            
             try {
                 const res = await fetch(`${API}/command`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action: { type, ...params } })
+                    body: JSON.stringify({ action: { type, ...params }, description: type.toUpperCase() })
                 });
                 return await res.json();
-            } catch (e) { console.error("Command failed."); }
+            } catch (e) { 
+                updateTerminal("Connection to command bridge lost.", "#f00");
+            }
         }
 
         async function syncStatus() {
@@ -358,20 +369,73 @@
                 
                 if(d.agent) {
                     const s = d.agent.stats || {};
-                    if(document.getElementById('s-cpu')) document.getElementById('s-cpu').innerText = `${s.cpu}%`;
-                    if(document.getElementById('s-ram')) document.getElementById('s-ram').innerText = `${s.ram}%`;
+                    // Use telemetry from results if more recent, fallback to registration stats
+                    if(document.getElementById('s-cpu')) document.getElementById('s-cpu').innerText = `${s.cpu || 0}%`;
+                    if(document.getElementById('s-ram')) document.getElementById('s-ram').innerText = `${s.ram || 0}%`;
+                    if(document.getElementById('s-bat')) document.getElementById('s-bat').innerText = `${s.bat || '--'}%`;
                     
-                    const assetUrl = `${API}/asset/${d.agent.last_screenshot}?t=${Date.now()}`;
-                    if(currentPage === 'vision') document.getElementById('v-stream').src = assetUrl;
-                    if(isMirroring) {
-                        document.getElementById('mirror-stream').src = assetUrl;
-                        document.getElementById('mirror-ts').innerText = `LAST SYNC: ${new Date().toLocaleTimeString()}`;
+                    if(d.agent.last_screenshot) {
+                        const assetUrl = `${API}/asset/${d.agent.last_screenshot}?t=${Date.now()}`;
+                        if(currentPage === 'vision') document.getElementById('v-stream').src = assetUrl;
+                        if(isMirroring) {
+                            document.getElementById('mirror-stream').src = assetUrl;
+                            document.getElementById('mirror-ts').innerText = `LAST SYNC: ${new Date().toLocaleTimeString()}`;
+                        }
                     }
                 }
+
+                // Process Latest Command Results into Terminal
+                if(d.commands && d.commands.length > 0) {
+                    d.commands.forEach(cmd => {
+                        if(cmd.status === 'done' && cmd.result) {
+                            const res = JSON.parse(cmd.result);
+                            const msg = `[${cmd.description}] ${res.success ? '✓' : '✗'} ${res.output || res.error || ''}`;
+                            updateTerminal(msg, res.success ? '#0f8' : '#f44');
+                            
+                            // Update telemetry from result if available
+                            if(res.telemetry) {
+                                if(document.getElementById('s-cpu')) document.getElementById('s-cpu').innerText = `${res.telemetry.cpu}%`;
+                                if(document.getElementById('s-ram')) document.getElementById('s-ram').innerText = `${res.telemetry.ram}%`;
+                                if(document.getElementById('s-bat')) document.getElementById('s-bat').innerText = `${res.telemetry.bat || '--'}%`;
+                            }
+                        } else if(cmd.status === 'failed') {
+                            updateTerminal(`[${cmd.description}] CRITICAL FAILURE`, '#f00');
+                        }
+                    });
+                }
+                
+                if(currentPage === 'system') fetchLogs();
+                if(currentPage === 'loot') loadLoot();
             } catch(e) {
                 failCount++;
                 if(failCount > 3) document.getElementById('reconnect-ui').style.display = 'flex';
             }
+        }
+
+        async function fetchLogs() {
+            const terminal = document.getElementById('log-terminal');
+            if(!terminal || currentPage !== 'system') return;
+            try {
+                const r = await fetch(`${API}/logs`);
+                const logs = await r.json();
+                terminal.innerHTML = logs.map(l => {
+                    const color = l.level === 'CRITICAL' ? '#f00' : l.level === 'WARNING' ? '#ff0' : '#0f0';
+                    return `<div style="color:${color}; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:5px;">
+                        [${new Date(l.created_at + 'Z').toLocaleTimeString()}] [${l.level}] ${l.message}
+                    </div>`;
+                }).join('') || '[EMPTY LOG]';
+            } catch(e) {}
+        }
+
+        function updateTerminal(msg, color='#0f0') {
+            const term = document.getElementById('log-terminal');
+            if(!term) return;
+            // Simple check to avoid duplicates if same result polled multiple times
+            if(term.innerText.includes(msg.substring(0, 20))) return;
+            const d = document.createElement('div');
+            d.style.color = color;
+            d.innerText = `> ${msg}`;
+            term.prepend(d);
         }
 
         async function loadLoot() {
