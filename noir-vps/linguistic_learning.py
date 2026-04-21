@@ -27,11 +27,10 @@ class LinguisticMastery:
         
         # We use Gemini for reasoning and synthesis
         raw_analysis = AIRouter.query_gemini(mission)
-        synthesis = AIRouter.query_gemini(f"Extract these patterns into a structured JSON for an AI agent: {raw_analysis}")
+        synthesis = AIRouter.query_gemini(f"Extract these patterns into a structured JSON for an AI agent: {raw_analysis}", response_json=True)
         
         try:
-            clean_json = synthesis.strip().replace("```json", "").replace("```", "")
-            patterns = json.loads(clean_json)
+            patterns = json.loads(synthesis)
             
             # 2. Save Patterns
             with open(PATTERNS_PATH, "w") as f:

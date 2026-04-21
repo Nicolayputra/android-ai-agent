@@ -39,10 +39,9 @@ class NLUProcessor:
         """
         
         try:
-            # Menggunakan Gemini karena API key tersedia
-            response = AIRouter.query_gemini(prompt)
-            clean_json = response.strip().replace("```json", "").replace("```", "")
-            result = json.loads(clean_json)
+            # Memanfaatkan native JSON MimeType dari Gemini 2.0 Flash
+            response = AIRouter.query_gemini(prompt, response_json=True)
+            result = json.loads(response)
             result["original"] = text
             return result
         except Exception as e:

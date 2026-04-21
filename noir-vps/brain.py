@@ -206,9 +206,8 @@ class AIRouter:
     """Routes queries to the best available free AI model."""
 
     @staticmethod
-    def query_gemini(prompt: str, image_base64: str = None) -> str:
+    def query_gemini(prompt: str, image_base64: str = None, response_json: bool = False) -> str:
         if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
-        full_prompt = f"{EXPERT_SYSTEM_PROMPT}\n\nUSER QUERY: {prompt}"
         try:
             import requests
             # Loosen safety filters for sovereign control
@@ -219,23 +218,29 @@ class AIRouter:
                 {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
             ]
             
-            parts = [{"text": full_prompt}]
+            parts = [{"text": prompt}]
             if image_base64:
                 parts.append({"inline_data": {"mime_type": "image/png", "data": image_base64}})
             
+            payload = {
+                "system_instruction": {"parts": [{"text": EXPERT_SYSTEM_PROMPT}]},
+                "contents": [{"role": "user", "parts": parts}],
+                "safetySettings": safety_settings
+            }
+            
+            if response_json:
+                payload["generationConfig"] = {"responseMimeType": "application/json"}
+            
+            # Upgraded to Gemini 2.0 Flash (Latest, Free, Native JSON/Tools support)
             r = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI}",
-                json={
-                    "contents": [{"parts": parts}],
-                    "safetySettings": safety_settings
-                },
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI}",
+                json=payload,
                 timeout=30
             )
             data = r.json()
             if "candidates" in data and len(data["candidates"]) > 0:
                 return data["candidates"][0]["content"]["parts"][0]["text"]
             else:
-                # Handle safety blocking or other issues
                 if "promptFeedback" in data and "blockReason" in data["promptFeedback"]:
                     return f"[Gemini Blocked] Reason: {data['promptFeedback']['blockReason']}"
                 return f"[Gemini Error] No candidates found. Raw: {json.dumps(data)[:200]}"
@@ -251,7 +256,7 @@ class AIRouter:
     def auto_correct(failed_cmd: dict, error_msg: str) -> dict:
         """Menganalisis kegagalan dan mencoba memperbaiki perintah."""
         prompt = f"Failed Command: {json.dumps(failed_cmd)}\nError: {error_msg}\nOptimize this for retry. Return only JSON."
-        correction = AIRouter.query_gemini(prompt)
+        correction = AIRouter.query_gemini(prompt, response_json=True)
         try:
             return json.loads(correction)
         except:

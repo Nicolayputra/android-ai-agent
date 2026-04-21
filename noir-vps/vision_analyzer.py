@@ -33,11 +33,9 @@ class ScreenVisionIntelligence:
             }
             """
             
-            # Memanfaatkan kemampuan multimodal Gemini Flash
-            response = AIRouter.query_gemini(prompt, image_base64=encoded_string)
-            clean_json = response.strip().replace("```json", "").replace("```", "")
-            
-            result = json.loads(clean_json)
+            # Memanfaatkan kemampuan multimodal & native JSON Gemini 2.0 Flash
+            response = AIRouter.query_gemini(prompt, image_base64=encoded_string, response_json=True)
+            result = json.loads(response)
             
             # 4. Integrate into Catalyst Knowledge
             catalyst.absorb_skill("Vision_Screen_Analysis", {"app": result.get("app_detected"), "complexity": 3})
