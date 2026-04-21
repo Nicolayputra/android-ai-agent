@@ -1,20 +1,36 @@
-# Dockerfile for Noir VPS Brain
+# NOIR SOVEREIGN v14.0 COMMANDER — VPS Docker Core
 FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for OpenCV and other AI tools
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     build-essential \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY noir-vps/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install python dependencies directly to avoid requirement mismatches
+RUN pip install --no-cache-dir \
+    requests \
+    fastapi \
+    uvicorn \
+    python-dotenv \
+    pyTelegramBotAPI \
+    numpy \
+    pandas \
+    Pillow \
+    opencv-python-headless \
+    scikit-image \
+    playwright \
+    youtube-transcript-api \
+    beautifulsoup4 \
+    docker
 
-COPY noir-vps/ .
-COPY .env .
+# Copy source code
+COPY . .
 
-CMD ["python", "brain.py"]
+# Default command (overridden by docker-compose)
+CMD ["python", "noir-vps/brain.py"]

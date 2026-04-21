@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NOIR AGENT v7.5 — TELEGRAM SOVEREIGN INTERFACE
+NOIR AGENT v14.0 COMMANDER — TELEGRAM SOVEREIGN INTERFACE
 =============================================
 Bot Telegram cerdas dengan integrasi AI Brain.
 """
@@ -32,13 +32,21 @@ except ImportError:
 BOT_TOKEN  = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 CHAT_ID    = os.environ.get("TELEGRAM_CHAT_ID", "")
 GATEWAY    = os.environ.get("NOIR_GATEWAY_URL", "").rstrip("/")
-API_KEY    = os.environ.get("NOIR_API_KEY", "NOIR_AGENT_KEY_V6_SI_UMKM_PBD_2026")
+API_KEY    = os.environ.get("NOIR_API_KEY", "")
 
 if not BOT_TOKEN:
     print("❌ TELEGRAM_BOT_TOKEN belum diisi di .env")
     sys.exit(1)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+from logging.handlers import RotatingFileHandler
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        RotatingFileHandler("../logs/noir_telegram.log", maxBytes=5*1024*1024, backupCount=2, encoding="utf-8")
+    ]
+)
 log = logging.getLogger("NoirTelegramBot")
 
 bot = TeleBot(BOT_TOKEN)
@@ -85,9 +93,9 @@ def cmd_start(msg):
         return
     bot.send_message(
         msg.chat.id,
-        "🖤 *NOIR SOVEREIGN CORE v13.0*\n\n"
+        "🖤 *NOIR SOVEREIGN CORE v14.0*\n\n"
         "Kewenangan Mutlak: USER\n"
-        "Sistem AI: ELITE-SOVEREIGN\n\n"
+        "Sistem AI: COMMANDER\n\n"
         "🛠️ **Commands**:\n"
         "/learn [topik] - Ajarkan AI skill baru\n"
         "/skills - Lihat daftar skill otonom\n"
@@ -182,7 +190,7 @@ def handle_all(msg):
             bot.reply_to(msg, f"📊 **RESULT**:\n`{json.dumps(result, indent=2)}`", parse_mode="Markdown")
             return
 
-    # 3. AI Processing (Brain Integration v13.0 with NLU Context)
+    # 3. AI Processing (Brain Integration v14.0 with NLU Context)
     log.info(f"🧠 Querying Brain for: {text}")
     try:
         # Pass normalized context to Brain

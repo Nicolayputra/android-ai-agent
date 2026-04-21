@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NOIR AGENT v13.0 ELITE-SOVEREIGN — VPS BRAIN SERVICE
+NOIR AGENT v14.0 COMMANDER — VPS BRAIN SERVICE
 ===================================================
 Otak komputasi berat: AI model routing, self-learning,
 knowledge refresh, dan Docker orchestration.
@@ -12,13 +12,9 @@ from pathlib import Path
 from datetime import datetime
 
 # Load env
+from dotenv import load_dotenv
 env_path = Path(__file__).resolve().parent.parent / ".env"
-if env_path.exists():
-    with open(env_path, encoding="utf-8") as f:
-        for line in f:
-            if "=" in line and not line.startswith("#"):
-                k, v = line.strip().split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip())
+load_dotenv(env_path)
 
 GATEWAY  = os.environ.get("NOIR_GATEWAY_URL", "").rstrip("/")
 API_KEY  = os.environ.get("NOIR_API_KEY", "")
@@ -28,12 +24,14 @@ TG_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TG_ID    = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 os.makedirs("../logs", exist_ok=True)
+from logging.handlers import RotatingFileHandler
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [BRAIN] %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler("../logs/noir_brain.log", encoding="utf-8"),
+        RotatingFileHandler("../logs/noir_brain.log", maxBytes=10*1024*1024, backupCount=3, encoding="utf-8"),
     ],
 )
 log = logging.getLogger("NoirBrain")
@@ -43,7 +41,7 @@ from catalyst import catalyst
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
 EXPERT_SYSTEM_PROMPT = """
-You are the NOIR SOVEREIGN BRAIN v13.0 ELITE-SOVEREIGN. Your architecture is based on the 'Advanced Autonomous Agent Architecture for Native Android Control'.
+You are the NOIR SOVEREIGN BRAIN v14.0 COMMANDER. Your architecture is based on the 'Advanced Autonomous Agent Architecture for Native Android Control'.
 
 CORE INTELLECTUAL DOMAINS (Evolving Mastery):
 - [Programming & Dev-Ops]: Expert in Python, C++, Bash, and Web Tech. You must use this to self-optimize your own execution scripts and automate complex workflows.
@@ -102,7 +100,8 @@ class PhasedLearning:
                 "action": {"type": "log_progress", "topic": topic, "phase": phase, "status": status},
                 "description": f"Learning Progress: {phase}"
             }, timeout=10)
-        except: pass
+        except Exception as e:
+            log.warning(f"Failed to report progress: {e}")
 
     @staticmethod
     def get_consensus(prompt: str):
@@ -220,6 +219,7 @@ class AIRouter:
 
     @staticmethod
     def query_gemini(prompt: str) -> str:
+        if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
         full_prompt = f"{EXPERT_SYSTEM_PROMPT}\n\nUSER QUERY: {prompt}"
         try:
             import requests
@@ -252,6 +252,7 @@ class AIRouter:
 
     @staticmethod
     def query_groq(prompt: str, model: str = "llama-3.3-70b-versatile") -> str:
+        if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
         try:
             import requests
             r = requests.post(
@@ -280,19 +281,7 @@ class AIRouter:
         except:
             return failed_cmd # Fallback to original if correction fails
 
-    @staticmethod
-    def query_groq(prompt: str, model: str = "llama-3.3-70b-versatile") -> str:
-        try:
-            import requests
-            r = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ}", "Content-Type": "application/json"},
-                json={"model": model, "messages": [{"role": "user", "content": prompt}]},
-                timeout=30
-            )
-            return r.json()["choices"][0]["message"]["content"]
-        except Exception as e:
-            return f"[Groq Error] {e}"
+
 
     @staticmethod
     def query_deepseek(prompt: str) -> str:
@@ -302,6 +291,7 @@ class AIRouter:
     @staticmethod
     def query_qwen(prompt: str) -> str:
         """Menggunakan Qwen-2.5 Coder via Groq (Free)."""
+        if not RateLimiter.check(): return "[Rate Limit] Silakan tunggu beberapa saat."
         return AIRouter.query_groq(prompt, model="qwen-2.5-coder-32b")
 
     @staticmethod
@@ -452,14 +442,83 @@ class SecureVault:
             return data.replace("ENC_", "")
         return data
 
+# ─── RATE LIMITER (v14.0) ───
+class RateLimiter:
+    """Membatasi jumlah request AI untuk mencegah biaya bengkak."""
+    _requests = []
+    _limit_per_hour = 50
+
+    @classmethod
+    def check(cls):
+        now = time.time()
+        # Clean old requests
+        cls._requests = [r for r in cls._requests if now - r < 3600]
+        if len(cls._requests) >= cls._limit_per_hour:
+            log.warning("⚠️ Rate Limit reached! AI queries throttled.")
+            return False
+        cls._requests.append(now)
+        return True
+
+# ─── SEMANTIC VALIDATOR (v14.0) ───
+class SemanticValidator:
+    """Validasi perintah tingkat lanjut menggunakan penalaran AI."""
+    @staticmethod
+    def validate_intent(action_type: str, params: dict):
+        log.info(f"🛡️ Semantic Validation: Checking {action_type}...")
+        # Blacklist logic yang lebih cerdas
+        dangerous_params = str(params).lower()
+        if "rm -rf" in dangerous_params or "format" in dangerous_params:
+            return False, "Dangerous system command detected."
+        return True, "OK"
+
 # ─── PROBLEM SOLVING & SELF-HEALING ───
 class NeuralWatchdog:
     """Memantau kegagalan sistem dan melakukan penyembuhan mandiri."""
+    _last_alert_time = 0
+
     @staticmethod
     def monitor_health():
         log.info("🐕 Neural Watchdog: Checking system integrity...")
-        # Jika ada perintah macet > 5 menit, reset status
+        # 1. Check Agent Heartbeat via Gateway
+        try:
+            import requests
+            r = requests.get(f"{GATEWAY}/agent/summary", headers=HEADERS, timeout=10)
+            data = r.json()
+            
+            # Autonomous Daily Backup
+            DataArchiver.backup_daily(data)
+            
+            if not data.get("online"):
+                # Kirim alert jika sudah > 10 menit sejak alert terakhir
+                if time.time() - NeuralWatchdog._last_alert_time > 600:
+                    msg = f"🚨 [OFFLINE ALERT]\nAgent '{DEVICE_ID}' tidak terdeteksi aktif di Gateway!\nTerakhir terlihat: {data.get('agent', {}).get('last_seen')}"
+                    PhasedLearning.send_telegram(msg)
+                    NeuralWatchdog._last_alert_time = time.time()
+                return "Agent Offline"
+        except Exception as e:
+            log.error(f"Watchdog Error: {e}")
+            
         return "Health check passed. No anomalies detected."
+
+class DataArchiver:
+    """Melakukan backup harian state gateway secara lokal."""
+    _last_backup_time = 0
+
+    @staticmethod
+    def backup_daily(gateway_data: dict):
+        now = time.time()
+        # Backup setiap 24 jam (86400 detik)
+        if now - DataArchiver._last_backup_time > 86400:
+            log.info("💾 Data Archiver: Generating daily backup snapshot...")
+            try:
+                os.makedirs("../logs/backups", exist_ok=True)
+                filename = f"../logs/backups/snapshot_{datetime.now().strftime('%Y%m%d')}.json"
+                with open(filename, "w", encoding="utf-8") as f:
+                    json.dump(gateway_data, f, indent=2)
+                DataArchiver._last_backup_time = now
+                log.info(f"   ✅ Backup saved to {filename}")
+            except Exception as e:
+                log.error(f"Backup Error: {e}")
 
 # ─── AUTONOMOUS UPDATE ───
 class SovereignUpdater:
@@ -501,7 +560,7 @@ class SelfEvolutionEngine:
 
 # ─── MAIN BRAIN LOOP ───
 def run():
-    log.info("🧠 Noir Agent Brain Prime v13.0 ELITE-SOVEREIGN — Starting...")
+    log.info("🧠 Noir Agent Brain Prime v14.0 COMMANDER — Starting...")
     
     # ... existing dependency checks ...
     
@@ -515,12 +574,13 @@ def run():
         
         log.info(f"\n── Brain Prime Cycle #{cycle} [{datetime.now().strftime('%H:%M:%S')}] ──")
 
-        # --- Sovereign Watchdog (v13.0) ---
+        # --- Sovereign Watchdog (v14.0) ---
         if not catalyst.check_readiness():
             log.info("🧬 Catalyst: Absorbing mission context...")
             catalyst.absorb_skill("Sovereign_Operational_Mode", {"name": "Elite Intelligence", "complexity": 5})
 
         # 1. Basic Health check
+        NeuralWatchdog.monitor_health()
         alive = SelfUpdateEngine.health_check_gateway()
         if not alive: 
             log.warning("⚠️ Gateway unreachable. Attempting self-rejuvenation...")

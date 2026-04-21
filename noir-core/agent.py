@@ -1,5 +1,5 @@
 """
-NOIR AGENT v6.0 — CORE ENGINE
+NOIR AGENT v14.0 COMMANDER — CORE ENGINE
 ================================
 The Sovereign Android AI Agent.
 Host: Redmi Note 14 (Termux)
@@ -42,7 +42,7 @@ load_env()
 GATEWAY_URL = os.environ.get("NOIR_GATEWAY_URL", "").rstrip("/")
 API_KEY     = os.environ.get("NOIR_API_KEY", "")
 DEVICE_ID   = os.environ.get("NOIR_DEVICE_ID", "REDMI_NOTE_14")
-AGENT_NAME  = "Noir Agent v6.0"
+AGENT_NAME  = "Noir Agent v14.0 COMMANDER"
 
 if not GATEWAY_URL or not API_KEY:
     print("⚠️  FATAL: NOIR_GATEWAY_URL dan NOIR_API_KEY belum dikonfigurasi.")
@@ -52,12 +52,14 @@ if not GATEWAY_URL or not API_KEY:
 # ─────────────────────────────────────────
 # LOGGING — UTF-8 Hardened
 # ─────────────────────────────────────────
+from logging.handlers import RotatingFileHandler
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(LOG_DIR / "noir_agent.log", encoding="utf-8"),
+        RotatingFileHandler(LOG_DIR / "noir_agent.log", maxBytes=5*1024*1024, backupCount=2, encoding="utf-8"),
     ],
 )
 log = logging.getLogger("NoirAgent")
@@ -83,18 +85,21 @@ def shell(cmd: str, timeout: int = 60) -> dict:
 # ─────────────────────────────────────────
 # CLOUD GATEWAY CLIENT
 # ─────────────────────────────────────────
-def cloud(method: str, endpoint: str, data: dict = None) -> dict | None:
-    """Komunikasi ke Cloudflare Gateway."""
+async def cloud(method: str, endpoint: str, data: dict = None) -> dict | None:
+    """Komunikasi ke Cloudflare Gateway (Asynchronous)."""
     try:
-        import requests
+        import aiohttp
         url = f"{GATEWAY_URL}/{endpoint.lstrip('/')}"
         headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
-        if method == "GET":
-            r = requests.get(url, headers=headers, timeout=15)
-        else:
-            r = requests.post(url, headers=headers, json=data, timeout=15)
-        r.raise_for_status()
-        return r.json()
+        async with aiohttp.ClientSession() as session:
+            if method == "GET":
+                async with session.get(url, headers=headers, timeout=15) as r:
+                    r.raise_for_status()
+                    return await r.json()
+            else:
+                async with session.post(url, headers=headers, json=data, timeout=15) as r:
+                    r.raise_for_status()
+                    return await r.json()
     except Exception as e:
         log.warning(f"[CLOUD-ERR] {method} /{endpoint} → {e}")
         return None
@@ -140,19 +145,22 @@ class ActionExecutor:
 # ─────────────────────────────────────────
 # MAIN LOOP — Adaptive & Self-Healing
 # ─────────────────────────────────────────
-def run():
+async def run():
+    # Mengunci Termux agar tidak dimatikan Android
+    shell("termux-wake-lock")
+    
     log.info(f"🖤 {AGENT_NAME} ONLINE — Device: {DEVICE_ID}")
     log.info(f"   Gateway: {GATEWAY_URL}")
 
     # Registrasi ke Cloud
-    reg = cloud("POST", "/agent/register", {"device_id": DEVICE_ID, "agent": AGENT_NAME})
+    reg = await cloud("POST", "/agent/register", {"device_id": DEVICE_ID, "agent": AGENT_NAME})
     if reg:
         log.info(f"✅ Registered: {reg}")
 
     poll_interval = 2
     while True:
         try:
-            data = cloud("GET", "/agent/poll")
+            data = await cloud("GET", "/agent/poll")
             if data:
                 commands = data.get("commands", [])
                 if commands:
@@ -166,7 +174,7 @@ def run():
                         result = ActionExecutor.execute(atype, params)
 
                         # Kirim hasil ke cloud
-                        cloud("POST", "/agent/result", {
+                        await cloud("POST", "/agent/result", {
                             "command_id": cmd_id,
                             "device_id": DEVICE_ID,
                             "success": result["success"],
@@ -177,14 +185,17 @@ def run():
                 else:
                     poll_interval = min(poll_interval + 1, 10)  # Adaptive backoff
 
-            time.sleep(poll_interval)
+            await asyncio.sleep(poll_interval)
 
-        except KeyboardInterrupt:
+        except asyncio.CancelledError:
             log.info("🔴 Noir Agent dihentikan oleh USER.")
             break
         except Exception as e:
             log.error(f"💀 Critical Error: {e}")
-            time.sleep(10)  # Self-healing delay
+            await asyncio.sleep(10)  # Self-healing delay
 
 if __name__ == "__main__":
-    run()
+    try:
+        asyncio.run(run())
+    except KeyboardInterrupt:
+        log.info("🔴 Agent shutdown gracefully.")

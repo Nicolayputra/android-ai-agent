@@ -1,7 +1,7 @@
-# NOIR AGENT v13.0 - ELITE-SOVEREIGN OMNI-INTELLIGENCE
+# NOIR AGENT v14.0 - COMMANDER OMNI-INTELLIGENCE
 
 ## 🖤 Identity & Vision
-Noir Agent v7 is an industrial-grade, autonomous AI ecosystem designed for absolute control and resilient operation on the Redmi Note 14. Moving beyond emulation, the agent is now a native part of the device's infrastructure.
+Noir Agent v14.0 is an industrial-grade, autonomous AI ecosystem designed for absolute control and resilient operation on the Redmi Note 14. Moving beyond emulation, the agent is now a native part of the device's infrastructure.
 
 ## 🏛️ System Pillars
 
@@ -29,5 +29,5 @@ Noir Agent v7 is an industrial-grade, autonomous AI ecosystem designed for absol
 To provide the USER with an undetectable, self-healing, and extremely powerful remote intelligence presence that bridges the gap between human thought and automated machine execution.
 
 ---
-**Build State:** 💠 V13.0 ELITE-SOVEREIGN ACTIVE
+**Build State:** 💠 V14.0 COMMANDER ACTIVE
 **Authority:** ABSOLUTE SOVEREIGN (USER)

@@ -1,0 +1,10 @@
+venv/
+.git/
+.github/
+project.tar.gz
+logs/
+__pycache__/
+*.pyc
+.env
+mobile_app/
+archive/

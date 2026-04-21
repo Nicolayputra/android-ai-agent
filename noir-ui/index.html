@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOIR SOVEREIGN | v13.0 ELITE-SOVEREIGN</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <title>NOIR COMMANDER | v14.0 SOVEREIGN-ELITE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #020204;
-            --panel: rgba(10, 10, 18, 0.9);
+            --bg: #010103;
+            --panel: rgba(8, 8, 15, 0.9);
             --accent: #00f2ff;
             --accent-glow: rgba(0, 242, 255, 0.4);
             --gold: #ffb300;
-            --danger: #ff0055;
-            --success: #00ffaa;
+            --danger: #ff0044;
+            --success: #00ffa2;
             --text: #e0e0e5;
-            --border: rgba(0, 242, 255, 0.15);
+            --border: rgba(0, 242, 255, 0.12);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; }
@@ -25,216 +25,277 @@
             height: 100vh;
             overflow: hidden;
             background-image: 
-                radial-gradient(circle at 20% 30%, #0a0a1a 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, #1a0a0a 0%, transparent 50%);
+                radial-gradient(circle at 5% 5%, #050520 0%, transparent 40%),
+                radial-gradient(circle at 95% 95%, #150505 0%, transparent 40%);
         }
 
-        .layout {
+        .commander-layout {
             display: grid;
-            grid-template-columns: 280px 1fr 320px;
+            grid-template-columns: 80px 240px 1fr;
             height: 100vh;
-            padding: 15px;
-            gap: 15px;
+            padding: 10px;
+            gap: 10px;
         }
 
         .glass {
             background: var(--panel);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border);
-            border-radius: 15px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        /* SIDEBAR */
-        .sidebar { padding: 25px; }
-        .brand {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--accent-glow);
-            margin-bottom: 40px;
-            letter-spacing: 2px;
-        }
-
-        .section-label {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.7rem;
-            color: var(--gold);
-            margin-bottom: 15px;
-            display: flex;
+        /* MASTER MENU (Left Bar) */
+        .master-menu {
             align-items: center;
-            gap: 10px;
+            padding: 20px 0;
+            gap: 20px;
         }
-
-        .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(255, 179, 0, 0.2); }
-
-        .nav-btn {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            padding: 14px;
-            border-radius: 8px;
-            color: #aaa;
-            cursor: pointer;
-            text-align: left;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .menu-icon {
+            width: 45px; height: 45px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border-radius: 10px;
+            border: 1px solid transparent; transition: 0.3s;
+            font-size: 1.2rem; color: #556;
         }
-
-        .nav-btn:hover {
-            background: rgba(0, 242, 255, 0.08);
+        .menu-icon:hover, .menu-icon.active {
+            background: rgba(0, 242, 255, 0.1);
             border-color: var(--accent);
-            color: #fff;
-            transform: translateX(5px);
-        }
-
-        /* MAIN CONTENT */
-        .main-viewport { display: grid; grid-template-rows: 1fr 200px; gap: 15px; }
-        
-        .vision-container { position: relative; flex: 1; background: #000; overflow: hidden; }
-        .vision-img { width: 100%; height: 100%; object-fit: contain; }
-        
-        .scanline {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent, rgba(0,242,255,0.05) 50%, transparent 100%);
-            animation: scan 6s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
-
-        .action-bar { padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-
-        .action-btn {
-            background: rgba(0, 242, 255, 0.05);
-            border: 1px solid var(--border);
             color: var(--accent);
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.3s;
+            box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        .action-btn:hover {
-            background: var(--accent);
-            color: #000;
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        /* RIGHT PANEL: NEURAL HUB */
-        .neural-hub { padding: 20px; }
-        
-        .log-list { flex: 1; overflow-y: auto; padding-right: 10px; }
-        .log-item {
-            font-family: 'Courier New', monospace;
-            font-size: 0.75rem;
-            padding: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            color: #889;
-        }
-        .log-item span { color: var(--accent); }
-
-        .catalyst-card {
-            background: rgba(255, 179, 0, 0.05);
-            border: 1px solid rgba(255, 179, 0, 0.2);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 20px;
-        }
-
-        .progress-bar {
-            height: 6px; background: #111; border-radius: 3px; margin: 15px 0; overflow: hidden;
-        }
-        .progress-fill { height: 100%; background: var(--gold); width: 0%; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* STATUS BADGE */
-        .status-badge {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(0, 255, 170, 0.1);
-            color: var(--success);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 700;
+        /* SUB-MENU (List) */
+        .sub-menu { padding: 20px; }
+        .menu-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem; color: var(--gold);
+            margin-bottom: 25px; letter-spacing: 2px;
             display: flex; align-items: center; gap: 8px;
-            border: 1px solid var(--success);
+        }
+        .menu-item {
+            padding: 12px 15px; border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            color: #889; cursor: pointer;
+            font-size: 0.8rem; margin-bottom: 8px;
+            transition: 0.2s;
+        }
+        .menu-item:hover {
+            background: rgba(0, 242, 255, 0.05);
+            color: #fff; transform: translateX(5px);
         }
 
-        .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); }
+        /* MAIN CONTENT AREA */
+        .content-area {
+            position: relative;
+            padding: 20px;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+        }
+
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); padding-bottom: 15px;
+        }
+        .page-title { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: #fff; }
+
+        .view-frame { flex: 1; border-radius: 10px; overflow: hidden; background: rgba(0,0,0,0.4); position: relative; }
+        
+        /* SPECIFIC VIEWS */
+        .vision-feed { width: 100%; height: 100%; object-fit: contain; }
+        .chat-container { display: flex; flex-direction: column; height: 100%; }
+        .chat-msgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; max-width: 80%; }
+        .msg.agent { align-self: flex-start; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border); color: var(--accent); }
+        .msg.user { align-self: flex-end; background: rgba(255, 179, 0, 0.05); border: 1px solid rgba(255, 179, 0, 0.2); color: var(--gold); }
+        .chat-input { padding: 15px; display: flex; gap: 10px; border-top: 1px solid var(--border); }
+        .chat-input input { flex: 1; background: none; border: none; color: #fff; outline: none; }
+
+        .loot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 10px; }
+        .loot-card { aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; }
+        .loot-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+        .loot-card:hover img { transform: scale(1.1); }
+
+        /* STATUS PILLS */
+        .status-badge {
+            padding: 4px 10px; border-radius: 15px; font-size: 0.65rem; font-weight: 700;
+            display: flex; align-items: center; gap: 6px; border: 1px solid var(--success); color: var(--success);
+        }
+
+        .browser-frame { width: 100%; height: 100%; border: none; border-radius: 10px; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
     </style>
 </head>
 <body>
 
-    <div class="layout">
-        <!-- SIDEBAR -->
-        <div class="glass sidebar">
-            <div class="brand">NOIR SOVEREIGN</div>
-            
-            <div class="section-label">STRATEGIC COMMAND</div>
-            <button class="nav-btn" onclick="sendCmd('screenshot')">📸 SCAN VISION STREAM</button>
-            <button class="nav-btn" onclick="sendCmd('ui_dump')">🧬 RE-MAP UI STRUCTURE</button>
-            <button class="nav-btn" onclick="sendCmd('stealth', {enabled: true})">🥷 ENGAGE STEALTH MODE</button>
-            <button class="nav-btn" onclick="sendCmd('stealth', {enabled: false})">👁️ DISENGAGE STEALTH</button>
+    <div class="commander-layout">
+        <!-- MASTER MENU -->
+        <nav class="glass master-menu">
+            <div class="menu-icon active" onclick="showPage('vision', this)" title="Vision Hub">👁️</div>
+            <div class="menu-icon" onclick="showPage('sensors', this)" title="Sensors">📡</div>
+            <div class="menu-icon" onclick="showPage('loot', this)" title="Media Loot">📦</div>
+            <div class="menu-icon" onclick="showPage('chat', this)" title="Intelligence Interaction">💬</div>
+            <div class="menu-icon" onclick="showPage('evolution', this)" title="Neural Evolution">🧬</div>
+            <div class="menu-icon" onclick="showPage('browser', this)" title="Global Research">🌐</div>
+            <div class="menu-icon" onclick="showPage('system', this)" title="System Matrix">⚙️</div>
+        </nav>
 
-            <div class="section-label" style="margin-top: 30px;">DEVICE MANAGEMENT</div>
-            <button class="nav-btn" onclick="sendCmd('battery')">⚡ POWER DIAGNOSTICS</button>
-            <button class="nav-btn" onclick="triggerHealing()">🩹 TRIGGER SELF-HEALING</button>
-            <button class="nav-btn" onclick="sendCmd('info')">ℹ️ AGENT MANIFESTO</button>
-        </div>
+        <!-- SUB MENU (Contextual) -->
+        <aside class="glass sub-menu" id="sub-menu-container">
+            <!-- Dynamic Content -->
+        </aside>
 
-        <!-- MAIN AREA -->
-        <div class="main-viewport">
-            <div class="glass vision-container">
+        <!-- MAIN CONTENT -->
+        <main class="glass content-area">
+            <header class="page-header">
+                <div class="page-title" id="page-title">VISION HUB</div>
                 <div class="status-badge">
-                    <div class="status-dot"></div> SYNC ACTIVE [v13.0]
+                    <span style="width: 8px; height: 8px; background: var(--success); border-radius: 50%;"></span>
+                    SYNC: REDMI_NOTE_14 [v14.0]
                 </div>
-                <div class="scanline"></div>
-                <img id="vision-feed" class="vision-img" src="/noir_screen.png" alt="Vision Feed">
+            </header>
+            
+            <div class="view-frame" id="main-view">
+                <!-- Page Content Injected Here -->
             </div>
-
-            <div class="glass action-bar">
-                <button class="action-btn" onclick="sendCmd('tap', {x: 500, y: 1000})">CENTER TAP</button>
-                <button class="action-btn" onclick="sendCmd('keyevent', {key: 26})">POWER TOGGLE</button>
-                <button class="action-btn" onclick="sendCmd('keyevent', {key: 3})">HOME</button>
-                <button class="action-btn" onclick="sendCmd('keyevent', {key: 4})">BACK</button>
-                <button class="action-btn" onclick="showPrompt()" style="background: rgba(255, 179, 0, 0.1); color: var(--gold); border-color: var(--gold);">EXECUTOR PROMPT</button>
-            </div>
-        </div>
-
-        <!-- RIGHT PANEL -->
-        <div class="glass neural-hub">
-            <div class="section-label">NEURAL EVOLUTION LOG</div>
-            <div class="log-list" id="log-list">
-                <div class="log-item"><span>[21:49:01]</span> Sovereign v13.0 ELITE-SOVEREIGN standing by.</div>
-            </div>
-
-            <div class="catalyst-card">
-                <div class="section-label" style="margin-bottom: 10px;">SOVEREIGN CATALYST</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #fff;" id="cat-growth">0.0%</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="cat-bar"></div>
-                </div>
-                <div style="font-size: 0.65rem; color: #666; font-style: italic;" id="cat-status">Absorbing local intelligence...</div>
-            </div>
-        </div>
+        </main>
     </div>
 
     <script>
         const API = "/api";
+        let currentPage = 'vision';
 
-        async function sendCmd(type, params={}) {
-            addLog(`Initiating: ${type.toUpperCase()}...`, 'PROCESS');
+        const PAGES = {
+            vision: {
+                title: "VISION HUB",
+                menu: [
+                    { label: "Capture Screen", cmd: 'screenshot' },
+                    { label: "Real-time Mirroring", cmd: 'screenshot', auto: true },
+                    { label: "Extract UI Metadata", cmd: 'ui_dump' }
+                ],
+                render: () => `<img id="v-stream" class="vision-feed" src="/api/asset/latest" alt="Vision Stream">`
+            },
+            sensors: {
+                title: "SENSOR ARRAY",
+                menu: [
+                    { label: "Back Camera Photo", cmd: 'camera_back' },
+                    { label: "Front Camera Photo", cmd: 'camera_front' },
+                    { label: "Record Audio (10s)", cmd: 'audio_record' },
+                    { label: "Capture Environment", cmd: 'camera_back' }
+                ],
+                render: () => `<div style="padding:40px; text-align:center; color:#556;">SENSOR STREAM ACTIVE. SELECT ACTION FROM LIST.</div>`
+            },
+            loot: {
+                title: "MEDIA LOOT",
+                menu: [
+                    { label: "Sync Gallery", cmd: 'gallery_sync' },
+                    { label: "Fetch All Assets", cmd: 'assets_fetch' },
+                    { label: "Clear Loot Storage", cmd: 'loot_clear' }
+                ],
+                render: () => `<div class="loot-grid" id="loot-grid">Loading assets...</div>`
+            },
+            chat: {
+                title: "NEURAL INTERACTION",
+                menu: [
+                    { label: "Clear History", cmd: 'chat_clear' },
+                    { label: "Export Logs", cmd: 'chat_export' }
+                ],
+                render: () => `
+                    <div class="chat-container">
+                        <div class="chat-msgs" id="chat-box"></div>
+                        <div class="chat-input">
+                            <input type="text" id="chat-in" placeholder="Query agent or enter shell command..." onkeypress="handleIn(event)">
+                            <button onclick="sendChat()" class="menu-item" style="margin:0; width:auto;">SEND</button>
+                        </div>
+                    </div>
+                `
+            },
+            evolution: {
+                title: "NEURAL EVOLUTION",
+                menu: [
+                    { label: "Trigger Learning", cmd: 'learn' },
+                    { label: "Optimize Logic", cmd: 'optimize' }
+                ],
+                render: () => `
+                    <div style="padding:25px;">
+                        <h4 style="color:var(--gold); margin-bottom:15px;">Skill Manifest:</h4>
+                        <div id="skill-box">Loading manifest...</div>
+                        <h4 style="color:var(--gold); margin:20px 0 10px;">Upgrade Proposals:</h4>
+                        <div id="proposal-box" style="color:#aaa; font-style:italic;">Analyzing behavioral patterns...</div>
+                    </div>
+                `
+            },
+            browser: {
+                title: "GLOBAL RESEARCH",
+                menu: [
+                    { label: "YouTube Research", url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+                    { label: "Gemini AI Portal", url: 'https://gemini.google.com' },
+                    { label: "ChatGPT Matrix", url: 'https://chat.openai.com' }
+                ],
+                render: () => `<iframe id="b-frame" class="browser-frame" src="https://www.google.com/search?q=ai+agent+learning&igu=1"></iframe>`
+            },
+            system: {
+                title: "SYSTEM MATRIX",
+                menu: [
+                    { label: "Auto-Update System", cmd: 'update' },
+                    { label: "Cache Purge & Heal", cmd: 'heal' },
+                    { label: "Cold Reboot Agent", cmd: 'reboot' },
+                    { label: "Stealth Mode", cmd: 'stealth', params: {enabled: true} }
+                ],
+                render: () => `
+                    <div style="padding:25px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                        <div class="glass" style="padding:15px;">
+                            <div style="color:var(--gold);">CPU STATUS</div>
+                            <div id="s-cpu" style="font-size:2rem; font-weight:700;">0%</div>
+                        </div>
+                        <div class="glass" style="padding:15px;">
+                            <div style="color:var(--gold);">RAM STATUS</div>
+                            <div id="s-ram" style="font-size:2rem; font-weight:700;">0%</div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        function showPage(pageId, el) {
+            currentPage = pageId;
+            const page = PAGES[pageId];
+            
+            // Update Icons
+            document.querySelectorAll('.menu-icon').forEach(i => i.classList.remove('active'));
+            if(el) el.classList.add('active');
+
+            // Update Title
+            document.getElementById('page-title').innerText = page.title;
+
+            // Update Sub-Menu
+            const sub = document.getElementById('sub-menu-container');
+            sub.innerHTML = `
+                <div class="menu-title">${pageId.toUpperCase()} CONTROL</div>
+                ${page.menu.map(item => `
+                    <div class="menu-item" onclick="${item.url ? `loadURL('${item.url}')` : `executeCmd('${item.cmd}', ${JSON.stringify(item.params || {})})`}">
+                        ${item.label}
+                    </div>
+                `).join('')}
+            `;
+
+            // Render Content
+            document.getElementById('main-view').innerHTML = page.render();
+
+            if(pageId === 'loot') loadLoot();
+            if(pageId === 'evolution') loadEvolution();
+            if(pageId === 'chat') syncChat();
+        }
+
+        async function executeCmd(type, params={}) {
             try {
                 const res = await fetch(`${API}/command`, {
                     method: 'POST',
@@ -242,58 +303,75 @@
                     body: JSON.stringify({ action: { type, ...params }, description: type })
                 });
                 const data = await res.json();
-                addLog(`Command broadcasted: ${data.command_id}`, 'SUCCESS');
-            } catch (e) {
-                addLog(`Broadcast failed: ${e}`, 'ERROR');
-            }
+                alert(`Command Broadcasted: ${data.command_id}`);
+            } catch (e) { alert("Broadcast Failed."); }
         }
 
-        function addLog(msg, tag = 'INFO') {
-            const list = document.getElementById('log-list');
-            const div = document.createElement('div');
-            div.className = 'log-item';
-            const now = new Date().toLocaleTimeString();
-            div.innerHTML = `<span>[${now}]</span> [${tag}] ${msg}`;
-            list.prepend(div);
+        function loadURL(url) {
+            const frame = document.getElementById('b-frame');
+            if(frame) frame.src = url;
         }
 
-        function showPrompt() {
-            const cmd = prompt("Enter Shell Command:");
-            if (cmd) sendCmd('shell', { cmd });
+        async function loadLoot() {
+            const r = await fetch(`${API}/assets`);
+            const data = await r.json();
+            const grid = document.getElementById('loot-grid');
+            if(grid) grid.innerHTML = data.map(asset => `
+                <div class="loot-card" onclick="window.open('${API}/asset/${asset.key}')">
+                    <img src="${API}/asset/${asset.key}" alt="Asset">
+                </div>
+            `).join('');
         }
 
-        function triggerHealing() {
-            sendCmd('shell', {cmd: 'pm trim-caches 999G'});
-            addLog("Self-Healing procedure initiated.", "HEAL");
+        async function loadEvolution() {
+            const r = await fetch(`${API}/skills`);
+            const d = await r.json();
+            document.getElementById('skill-box').innerHTML = d.active.map(s => `<span style="display:inline-block; padding:5px 10px; background:rgba(255,255,255,0.05); margin:0 5px 5px 0; border-radius:4px; font-size:0.75rem;">${s}</span>`).join('');
+            document.getElementById('proposal-box').innerText = d.proposal;
         }
 
-        async function updateStatus() {
+        function handleIn(e) { if(e.key === 'Enter') sendChat(); }
+        async function sendChat() {
+            const input = document.getElementById('chat-in');
+            const val = input.value.trim();
+            if(!val) return;
+            addMsg(val, 'user');
+            input.value = '';
+            // Logic for shell vs chat
+            if(val.startsWith('/')) executeCmd('shell', {cmd: val.substring(1)});
+            else addMsg("Agent: Menganalisis... Menunggu pemrosesan NLU.", 'agent');
+        }
+        function addMsg(text, role) {
+            const box = document.getElementById('chat-box');
+            if(!box) return;
+            const d = document.createElement('div');
+            d.className = `msg ${role}`;
+            d.innerText = text;
+            box.appendChild(d);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function syncStatus() {
             try {
-                // 1. Update Screenshot (Real-time Share)
-                const r_assets = await fetch(`/api/assets`);
-                const d_assets = await r_assets.json();
-                if(d_assets.assets && d_assets.assets.length > 0) {
-                    const latest_key = d_assets.assets[0].key;
-                    document.getElementById('vision-feed').src = `/api/asset/${latest_key}`;
-                }
-
-                // 2. Update Catalyst
-                const r = await fetch(`/api/status`);
+                const r = await fetch(`${API}/status`);
                 const d = await r.json();
-                
-                if(d.catalyst) {
-                    const growth = (d.catalyst.growth_level * 100).toFixed(1);
-                    document.getElementById('cat-growth').innerText = `${growth}%`;
-                    document.getElementById('cat-bar').style.width = `${growth}%`;
-                    if(d.catalyst.growth_level >= 0.8) {
-                        document.getElementById('cat-status').innerText = "ELITE MISSION READY";
-                        document.getElementById('cat-status').style.color = "var(--success)";
+                if(d.agent) {
+                    const s = d.agent.stats || {};
+                    if(document.getElementById('s-cpu')) document.getElementById('s-cpu').innerText = `${s.cpu || 0}%`;
+                    if(document.getElementById('s-ram')) document.getElementById('s-ram').innerText = `${s.ram || 0}%`;
+                    
+                    if(currentPage === 'vision' && d.agent.last_screenshot) {
+                        const img = document.getElementById('v-stream');
+                        if(img) img.src = `${API}/asset/${d.agent.last_screenshot}?t=${Date.now()}`;
                     }
                 }
-            } catch(e) {}
+            } catch(e){}
         }
 
-        setInterval(updateStatus, 10000);
+        // Init
+        showPage('vision');
+        setInterval(syncStatus, 5000);
+
     </script>
 </body>
 </html>

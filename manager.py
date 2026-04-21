@@ -1,134 +1,58 @@
-import os, sys, json, time, logging, subprocess
-import requests
-from pathlib import Path
-from paramiko import SSHClient, AutoAddPolicy
-from scp import SCPClient
-
-# === LOGGING CONFIG ===
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-def log(msg, tag="INFO"):
-    print(f"[{tag}] {msg}")
-
-def run_cmd(cmd):
-    try:
-        return subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, text=True)
-    except Exception as e:
-        return str(e)
+import os, sys, shutil, json, time, subprocess
 
 class NoirManager:
     def __init__(self):
-        self.root = Path(__file__).parent.resolve()
-        self.config = self._load_env()
-        
-    def _load_env(self):
-        env = {}
-        path = self.root / ".env"
-        if path.exists():
-            with open(path) as f:
-                for line in f:
-                    if "=" in line and not line.startswith("#"):
-                        k, v = line.strip().split("=", 1)
-                        env[k.strip()] = v.strip()
-        return env
-
-    def deploy_gateway(self):
-        log("Deploying Cloudflare Gateway...", "GATEWAY")
-        os.chdir(self.root / "noir-gateway")
-        run_cmd("npx wrangler deploy")
-        log("Gateway Deployed Successfully.", "SUCCESS")
-        os.chdir(self.root)
+        # Fallback to hardcoded IP if not in env
+        self.vps_ip = os.environ.get("NOIR_VPS_IP", "8.215.23.17")
+        self.vps_user = os.environ.get("NOIR_VPS_USER", "root")
+        self.remote_path = "/root/noir-agent"
+        self.ssh_base = ["ssh", f"{self.vps_user}@{self.vps_ip}"]
 
     def deploy_vps(self):
-        ip = self.config.get("VPS_ALIBABA_IP")
-        pw = self.config.get("VPS_PASSWORD", "N!colay_No1r.Ai@Agent#Secure")
-        if not ip:
-            log("VPS IP not found in .env", "ERROR")
-            return
-
-        log(f"Connecting to VPS {ip}...", "VPS")
-        ssh = SSHClient()
-        ssh.set_missing_host_key_policy(AutoAddPolicy())
+        print("[PROCESS] Syncing to VPS (v14.0 COMMANDER)...")
         try:
-            ssh.connect(ip, username="root", password=pw)
-            tar_file = "project.tar.gz"
-            log("Compressing project...", "PROCESS")
-            run_cmd(f"tar -czf {tar_file} --exclude='node_modules' --exclude='venv' --exclude='.git' --exclude='mobile_app/.buildozer' .")
+            # Sync files
+            subprocess.run(["scp", "-r", ".", f"{self.vps_user}@{self.vps_ip}:{self.remote_path}"], check=True)
+            # Kill existing standalone process and docker containers
+            subprocess.run(self.ssh_base + ["fuser -k 80/tcp || true"])
+            subprocess.run(self.ssh_base + [f"cd {self.remote_path} && docker-compose down || true"])
             
-            log("Uploading to VPS...", "PROCESS")
-            with SCPClient(ssh.get_transport()) as scp:
-                scp.put(tar_file, f"/root/{tar_file}")
+            # Start all services in Docker (Brain, Telegram, Dashboard)
+            print("[PROCESS] Starting All Neural Services in Docker...")
+            subprocess.run(self.ssh_base + [f"cd {self.remote_path} && docker-compose up -d --build"], check=True)
             
-            log("Restarting Infrastructure...", "PROCESS")
-            commands = [
-                "mkdir -p /root/noir-agent",
-                f"tar -xzf /root/{tar_file} -C /root/noir-agent",
-                "cd /root/noir-agent && docker-compose down",
-                "cd /root/noir-agent && docker-compose up -d --build"
-            ]
-            for cmd in commands:
-                ssh.exec_command(cmd)
-            
-            log("VPS Infrastructure ACTIVE.", "SUCCESS")
+            print("[SUCCESS] v14.0 COMMANDER DEPLOYED.")
         except Exception as e:
-            log(f"VPS Deployment Failed: {e}", "ERROR")
-        finally:
-            ssh.close()
+            print(f"[ERROR] Deployment failed: {e}")
+
+    def clean_vps(self):
+        print("[PROCESS] Purging VPS Cache...")
+        try:
+            subprocess.run(self.ssh_base + ["docker system prune -af --volumes"], check=True)
+            print("[SUCCESS] Cache Purged.")
+        except Exception as e:
+            print(f"[ERROR] Cleanup failed: {e}")
+
+    def gateway_deploy(self):
+        print("[PROCESS] Deploying Cloudflare Gateway...")
+        try:
+            subprocess.run(["npx", "wrangler", "deploy"], check=True, cwd="noir-gateway")
+            print("[SUCCESS] Gateway LIVE.")
+        except Exception as e:
+            print(f"[ERROR] Gateway deploy failed: {e}")
 
     def health_check(self):
-        log("Starting Global Diagnostic v13.0...", "DIAG")
-        # 1. Gateway
-        url = self.config.get("NOIR_GATEWAY_URL", "")
-        if url:
-            try:
-                r = requests.get(f"{url}/health", timeout=10)
-                log(f"Gateway: {r.status_code} ({r.json().get('status','?')})", "SUCCESS" if r.status_code==200 else "ERROR")
-            except:
-                log("Gateway: Unreachable", "ERROR")
-        
-        # 2. VPS
-        vps_ip = self.config.get("VPS_ALIBABA_IP", "")
-        if vps_ip:
-            res = run_cmd(f"ping -n 1 {vps_ip}" if sys.platform == "win32" else f"ping -c 1 {vps_ip}")
-            log(f"VPS Ping: {'OK' if 'Reply' in res or '64 bytes' in res else 'FAILED'}", "SUCCESS" if 'Reply' in res or '64 bytes' in res else "ERROR")
-
-    def heal(self):
-        log("Initiating Autonomous Healing v13.0...", "HEAL")
-        # Optimization
-        log("Optimizing Network Stack...", "PROCESS")
-        ip = self.config.get("VPS_ALIBABA_IP")
-        pw = self.config.get("VPS_PASSWORD", "N!colay_No1r.Ai@Agent#Secure")
-        ssh = SSHClient()
-        ssh.set_missing_host_key_policy(AutoAddPolicy())
-        try:
-            ssh.connect(ip, username="root", password=pw)
-            ssh.exec_command("sudo ufw allow 80/tcp; sudo sysctl -w net.core.somaxconn=1024")
-            log("VPS Network Optimized.", "OK")
-        except: pass
-        finally: ssh.close()
-        
-        self.deploy_vps()
-        log("Healing sequence complete.", "SUCCESS")
-
-    def show_menu(self):
-        while True:
-            print(f"\n{'='*20} NOIR MASTER MANAGER v13.0 {'='*20}")
-            print("1. Full Deployment")
-            print("2. Health Check (Audit)")
-            print("3. Autonomous Healing (Fix 500/Latency)")
-            print("0. Exit")
-            print("="*67)
-            choice = input("Select > ").strip()
-            if choice == "1": self.deploy_vps()
-            elif choice == "2": self.health_check()
-            elif choice == "3": self.heal()
-            elif choice == "0": break
+        print("[PROCESS] Running Diagnostics...")
+        subprocess.run(self.ssh_base + ["docker ps"])
+        subprocess.run(self.ssh_base + ["lsof -i :80"])
 
 if __name__ == "__main__":
     manager = NoirManager()
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
         if cmd == "deploy": manager.deploy_vps()
+        elif cmd == "gateway": manager.gateway_deploy()
         elif cmd == "check": manager.health_check()
-        elif cmd == "heal": manager.heal()
+        elif cmd == "clean": manager.clean_vps()
     else:
-        manager.show_menu()
+        print("Usage: python manager.py [deploy|gateway|check|clean]")

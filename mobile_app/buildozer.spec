@@ -1,10 +1,10 @@
 [app]
 
 # --- Identitas Aplikasi ---
-title = Noir Sovereign v13
+title = Noir Sovereign v14
 package.name = noirsmc
 package.domain = org.antigravity
-version = 13.0.0
+version = 14.0.0
 
 # --- Sumber Kode ---
 source.dir = .
@@ -23,8 +23,8 @@ android.accept_sdk_license = True
 # --- Arsitektur (arm64-v8a adalah target utama Redmi Note 14) ---
 android.archs = arm64-v8a
 
-# --- Izin Sistem (Sovereign Control) ---
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,FOREGROUND_SERVICE,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECEIVE_BOOT_COMPLETED,SYSTEM_ALERT_WINDOW,VIBRATE,POST_NOTIFICATIONS
+# --- Izin Sistem (Sovereign Control & Shizuku) ---
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,FOREGROUND_SERVICE,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECEIVE_BOOT_COMPLETED,SYSTEM_ALERT_WINDOW,VIBRATE,POST_NOTIFICATIONS,moe.shizuku.manager.permission.API_V23
 
 # --- Orientasi ---
 orientation = portrait

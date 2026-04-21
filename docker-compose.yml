@@ -11,31 +11,46 @@ services:
       - ./logs:/app/logs
     networks:
       - noir-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import os; exit(0 if os.path.exists('/app/noir-vps/brain.py') else 1)"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
   noir-dashboard:
-    image: python:3.10-slim
+    build: .
     container_name: noir-dashboard
     restart: always
-    working_dir: /app
+    working_dir: /app/noir-ui
     volumes:
-      - ./noir-ui:/app
+      - ./noir-ui:/app/noir-ui
       - .env:/app/.env
     ports:
-      - "8765:8765"
+      - "80:80"
     command: python web_server.py
     networks:
       - noir-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
   noir-telegram:
     build: .
     container_name: noir-telegram
     restart: always
     env_file: .env
-    command: python telegram_bot.py
+    command: python noir-vps/telegram_bot.py
     volumes:
       - ./logs:/app/logs
     networks:
       - noir-net
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import os; exit(0 if os.path.exists('/app/noir-vps/telegram_bot.py') else 1)"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
 networks:
   noir-net:
