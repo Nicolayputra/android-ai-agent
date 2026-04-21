@@ -112,8 +112,12 @@ class PhasedLearning:
         return {"gemini": opinion}, opinion
 
     @staticmethod
-    def send_telegram(msg: str):
-        """Kirim pesan ke Telegram USER."""
+    def send_telegram(msg: str, important: bool = False):
+        """Kirim pesan ke Telegram USER (Filtered by Sovereignty Standard)."""
+        if not important:
+            log.debug(f"🔇 [SILENT MODE] Skipping notification: {msg}")
+            return
+            
         if not TG_TOKEN or not TG_ID: return
         try:
             import requests
@@ -136,8 +140,8 @@ class PhasedLearning:
                 "description": f"Auth Needed: {topic}"
             }, timeout=10)
             
-            # 2. Notifikasi Telegram
-            PhasedLearning.send_telegram(msg)
+            # 2. Notifikasi Telegram (IMPORTANT)
+            AIRouter.send_telegram(msg, important=True)
         except: pass
         return "Permission request transmitted. Waiting for user handshake..."
 
@@ -490,7 +494,7 @@ class NeuralWatchdog:
                 # Kirim alert jika sudah > 10 menit sejak alert terakhir
                 if time.time() - NeuralWatchdog._last_alert_time > 600:
                     msg = f"🚨 [OFFLINE ALERT]\nAgent '{DEVICE_ID}' tidak terdeteksi aktif di Gateway!\nTerakhir terlihat: {data.get('agent', {}).get('last_seen')}"
-                    PhasedLearning.send_telegram(msg)
+                    AIRouter.send_telegram(msg, important=True)
                     NeuralWatchdog._last_alert_time = time.time()
                 return "Agent Offline"
         except Exception as e:
@@ -554,7 +558,7 @@ class SelfEvolutionEngine:
     def propose_skill(skill_name: str, reason: str):
         log.info(f"💡 Proposing New Skill: {skill_name}")
         msg = f"PROPOSAL: {skill_name}\nAlasan: {reason}\n\nSetujui di Dashboard Prime."
-        PhasedLearning.send_telegram(msg)
+        AIRouter.send_telegram(msg, important=True)
 
 # ─── MAIN BRAIN LOOP ───
 def run():
