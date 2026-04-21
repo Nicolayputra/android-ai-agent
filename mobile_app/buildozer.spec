@@ -42,7 +42,8 @@ fullscreen = 0
 p4a.branch = master
 
 # --- Gradle ---
-android.gradle_dependencies = com.android.support:support-v4:28.0.0
+android.enable_androidx = True
+# android.gradle_dependencies = 
 
 # --- Wearable API atau extras (kosong dulu) ---
 # android.add_libs_armeabi_v7a =
