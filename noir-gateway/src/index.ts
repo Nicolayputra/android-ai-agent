@@ -70,10 +70,11 @@ app.post('/agent/upload', async (c) => {
   const device_id = c.req.query('device_id') || 'UNKNOWN';
   const body = await c.req.parseBody();
   const file = body.file as File;
-  const key = `ss_${Date.now()}.png`;
+  const ext = file.name.split('.').pop() || 'png';
+  const key = `ss_${Date.now()}.${ext}`;
   
   await c.env.BUCKET.put(key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: 'image/png' }
+    httpMetadata: { contentType: file.type || 'image/png' }
   });
   
   await c.env.DB.prepare(

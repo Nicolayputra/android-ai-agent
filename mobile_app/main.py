@@ -17,12 +17,19 @@ import os
 import time
 import threading
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.clock import Clock
+
+# Configure robust requests with built-in retry for DNS/Network issues
+session = requests.Session()
+retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+session.mount('https://', HTTPAdapter(max_retries=retries))
 
 # --- CONFIG ---
 # Fallback to defaults if env vars are not set during build
@@ -145,7 +152,7 @@ class SovereignCore(App):
             except:
                 pass
 
-            r = requests.post(
+            r = session.post(
                 f"{GATEWAY_URL}/agent/register",
                 headers=headers,
                 json={
@@ -153,14 +160,14 @@ class SovereignCore(App):
                     "agent": "Noir SMC v14.0 COMMANDER",
                     "stats": {"cpu": cpu, "ram": ram}
                 },
-                timeout=15
+                timeout=20
             )
             if r.status_code == 200:
                 self._log("[SMC] Registration: SUCCESS")
             else:
                 self._log(f"[SMC] Registration: HTTP {r.status_code}")
         except Exception as e:
-            self._log(f"[SMC] Registration Error: {e}")
+            self._log(f"[SMC] Connectivity Error (DNS?): {e}")
 
     def _screen_share_loop(self):
         """Periodically upload screenshots for real-time dashboard (Autonomous Share)."""
@@ -198,11 +205,11 @@ class SovereignCore(App):
         while True:
             try:
                 headers = {"Authorization": f"Bearer {API_KEY}"}
-                resp = requests.get(
+                resp = session.get(
                     f"{GATEWAY_URL}/agent/poll",
                     headers=headers,
                     params={"device_id": DEVICE_ID},
-                    timeout=15
+                    timeout=20
                 )
 
                 if resp.status_code == 200:
@@ -287,27 +294,43 @@ class SovereignCore(App):
                 result = {"success": True, "output": f"Stopped {pkg}"}
 
             elif atype in ("screenshot", "capture"):
-                # Use internal storage to avoid /sdcard permission issues on Android 14
                 parent = App.get_running_app().user_data_dir
                 if not os.path.exists(parent):
                     os.makedirs(parent, exist_ok=True)
                 path = os.path.join(parent, "noir_vision.png")
-                
                 # Take screenshot via Shizuku-enabled shell
                 res = self._run_shell(f"screencap -p {path}")
                 if not res["success"]:
                     result = {"success": False, "error": f"Screencap Error: {res.get('output', 'Unknown error')}"}
                     return # Exit this block
                 
-                time.sleep(1.2) # Wait for file to fully write
+                time.sleep(0.5) 
 
-                with open(path, 'rb') as f:
-                    r = requests.post(
+                # COMPRESSION ENGINE: Convert PNG to optimized JPEG
+                jpeg_path = path.replace(".png", ".jpg")
+                try:
+                    from PIL import Image
+                    with Image.open(path) as img:
+                        if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                        
+                        # Optimization: Rescale to max 1280px while maintaining aspect ratio
+                        img.thumbnail((1280, 1280))
+                        
+                        # High-Efficiency Compression: JPEG 50
+                        img.save(jpeg_path, "JPEG", quality=50, optimize=True)
+                    upload_file = jpeg_path
+                except Exception as e:
+                    self._log(f"[SMC] Compression failed: {e}")
+                    upload_file = path # Fallback to original
+
+                with open(upload_file, 'rb') as f:
+                    r = session.post(
                         f"{GATEWAY_URL}/agent/upload",
                         headers={"Authorization": f"Bearer {API_KEY}"},
-                        files={'file': ('screenshot.png', f, 'image/png')},
+                        files={'file': ('screenshot.jpg' if ".jpg" in upload_file else 'screenshot.png', f, 'image/jpeg' if ".jpg" in upload_file else 'image/png')},
                         data={'device_id': DEVICE_ID},
-                        timeout=30
+                        timeout=40
                     )
 
                 if r.status_code == 200:

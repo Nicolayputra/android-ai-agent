@@ -4,7 +4,7 @@
 title = Noir Sovereign v14
 package.name = noirsmc
 package.domain = org.antigravity
-version = 14.0.1
+version = 14.0.2
 
 # --- Sumber Kode ---
 source.dir = .
@@ -13,7 +13,7 @@ source.exclude_dirs = tests, bin, .buildozer
 
 # --- Dependensi Python ---
 # Hanya dependensi yang PASTI ada di python-for-android recipes
-requirements = python3,kivy==2.3.0,requests,urllib3,certifi,idna,charset-normalizer,pyjnius
+requirements = python3,kivy==2.3.0,requests,urllib3,certifi,idna,charset-normalizer,pyjnius,Pillow
 
 # --- Target Platform ---
 android.api = 34
