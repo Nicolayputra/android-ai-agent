@@ -289,21 +289,31 @@
             system: {
                 title: "SYSTEM MATRIX",
                 menu: [
-                    { label: "Auto-Update", cmd: 'update' },
-                    { label: "Force Reboot", cmd: 'reboot' }
+                    { label: "Neural Heal", cmd: 'heal' },
+                    { label: "Sync Core", cmd: 'update' }
                 ],
                 render: () => `
-                    <div style="padding:25px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                        <div class="glass" style="padding:15px;"><div>CPU</div><div id="s-cpu">0%</div></div>
-                        <div class="glass" style="padding:15px;"><div>RAM</div><div id="s-ram">0%</div></div>
+                    <div style="padding:25px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;">
+                        <div class="glass" style="padding:15px; border-left:3px solid var(--gold);">
+                            <div style="font-size:0.6rem; opacity:0.7;">CPU LOAD</div>
+                            <div id="s-cpu" style="font-size:1.2rem; font-weight:bold;">--</div>
+                        </div>
+                        <div class="glass" style="padding:15px; border-left:3px solid var(--gold);">
+                            <div style="font-size:0.6rem; opacity:0.7;">RAM USAGE</div>
+                            <div id="s-ram" style="font-size:1.2rem; font-weight:bold;">--</div>
+                        </div>
+                        <div class="glass" style="padding:15px; border-left:3px solid var(--gold);">
+                            <div style="font-size:0.6rem; opacity:0.7;">BATTERY</div>
+                            <div id="s-bat" style="font-size:1.2rem; font-weight:bold;">--</div>
+                        </div>
                     </div>
                     <div class="glass" style="margin:0 25px 25px; padding:15px; flex:1; display:flex; flex-direction:column;">
                         <div style="color:var(--gold); font-size:0.7rem; margin-bottom:10px; display:flex; justify-content:space-between;">
-                            <span>DIAGNOSTIC TELEMETRY</span>
+                            <span>DIAGNOSTIC TELEMETRY (REAL-TIME)</span>
                             <span style="cursor:pointer;" onclick="clearLogs()">CLEAR</span>
                         </div>
-                        <div id="log-terminal" style="flex:1; background:#000; font-family:monospace; font-size:0.7rem; padding:10px; overflow-y:auto; color:#0f0; min-height:200px;">
-                            [SYSTEM] Initializing diagnostics...
+                        <div id="log-terminal" style="flex:1; background:rgba(0,0,0,0.5); font-family:monospace; font-size:0.7rem; padding:10px; overflow-y:auto; color:#0f0; min-height:200px; border:1px solid rgba(255,215,0,0.1);">
+                            [SYSTEM] Noir Sovereign v14.0.4 Online.
                         </div>
                     </div>
                 `

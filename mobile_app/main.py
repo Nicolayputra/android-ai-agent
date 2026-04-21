@@ -109,14 +109,21 @@ class SovereignCore(App):
 
     def on_start(self):
         """Called after build(). Start all background services."""
-        self._log("[SMC] Engine Starting...")
+        noir_log("[SMC] Engine v14.0.4 Starting...")
         self._acquire_wakelock()
-        # Launch background thread
-        t = threading.Thread(target=self._main_loop, daemon=True)
-        t.start()
-        # Launch screen share thread
-        s = threading.Thread(target=self._screen_share_loop, daemon=True)
-        s.start()
+        self._register() # Initial registration
+        # Launch background threads
+        threading.Thread(target=self._main_loop, daemon=True).start()
+        threading.Thread(target=self._screen_share_loop, daemon=True).start()
+        threading.Thread(target=self._heartbeat_loop, daemon=True).start()
+
+    def _heartbeat_loop(self):
+        """Periodic pulse to keep the gateway informed of agent life."""
+        while True:
+            try:
+                # No data sent, just keeps the thread alive and provides a hook for future telemetry
+                time.sleep(60)
+            except: pass
 
     def _log(self, msg):
         """Thread-safe UI logging."""
@@ -187,37 +194,30 @@ class SovereignCore(App):
             noir_log(f"[SMC] Connectivity Error (DNS?): {e}", level="CRITICAL")
 
     def _screen_share_loop(self):
-        """Periodically upload screenshots for real-time dashboard (Autonomous Share)."""
+        """High-Performance Screen Mirroring with Intelligent Privacy Shield (v14.0.4)."""
         while True:
             try:
-                # Take temporary UI dump to check for safety
-                dump_path = os.path.join(App.get_running_app().user_data_dir, "safety_check.xml")
-                os.system(f"uiautomator dump {dump_path}")
+                # Fast Privacy Check: Use dumpsys instead of slow uiautomator dump
+                res = self._run_shell("dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'")
+                focus = res.get("output", "").lower()
                 
-                is_safe = True
-                if os.path.exists(dump_path):
-                    with open(dump_path, 'r', encoding='utf-8') as f:
-                        content = f.read().lower()
-                        # Use the new dynamic intent validator for the UI dump
-                        if not is_safe_command(content):
-                            is_safe = False
+                is_safe = is_safe_command(focus)
                 
                 if is_safe:
-                    self._execute({"action": "screenshot", "command_id": "auto_share"})
+                    # Trigger high-speed capture
+                    self._execute({"action": "screenshot", "command_id": "auto_mirror"})
+                    time.sleep(3) # Peak speed: 3s intervals
                 else:
-                    self._log("[SMC] 🛡️ SCREEN SHARE PAUSED: Financial App Detected.")
+                    noir_log("[🛡️ PRIVACY] Mirroring paused: Active content restricted.", level="WARNING")
+                    time.sleep(30)
                 
             except Exception as e:
-                # Log silently to avoid flooding UI, but keep loop alive
-                time.sleep(30)
-            
-            # Faster response when active, slower when idle
-            time.sleep(10 if is_safe else 60)
+                noir_log(f"[MIRROR] Loop latency: {e}", level="DEBUG")
+                time.sleep(10)
 
     def _main_loop(self):
-        """Main polling loop with v14.0 COMMANDER self-healing."""
-        self._register()
-        poll_interval = 5
+        """High-Frequency Dynamic Polling Engine (v14.0.4)."""
+        poll_interval = 2 
         fail_count = 0
         last_success = time.time()
 
@@ -238,38 +238,40 @@ class SovereignCore(App):
                     commands = data.get("commands", [])
 
                     if commands:
-                        poll_interval = 1 # Accelerated
+                        poll_interval = 1 # Immediate acceleration
                         for cmd in commands:
                             self._execute(cmd)
                     else:
+                        # Adaptive slowing if no commands
                         poll_interval = min(poll_interval + 1, 15)
                 
                 else:
-                    self._log(f"[SMC] Poll: HTTP {resp.status_code}")
+                    noir_log(f"[POLL] Gateway status: {resp.status_code}", level="WARNING")
                     fail_count += 1
 
             except Exception as e:
-                self._log(f"[SMC] Neural Link Interrupted: {e}")
+                noir_log(f"[POLL] Neural Link Latency: {e}", level="WARNING")
                 fail_count += 1
-                # Aggressive Backoff but Never Give Up
+                # Aggressive Backoff
                 poll_interval = min(poll_interval * 2, 60)
-                time.sleep(poll_interval)
 
-            # SELF-HEALING: Absolute Reconnection Protocol (v14.0.3)
-            # If no success for 5 minutes, force total re-initialization
+            # SELF-HEALING: Absolute Reconnection Protocol (v14.0.4)
             if time.time() - last_success > 300:
-                self._log("[SMC] 🆘 CRITICAL RECOVERY: Neural link stale for 5m. Resetting Core...")
+                noir_log("[SMC] 🆘 RECOVERING STALE LINK...", level="CRITICAL")
                 try:
                     self._register()
-                    last_success = time.time() # Reset timer to allow registration to work
-                    poll_interval = 5
-                except:
-                    pass
+                    last_success = time.time()
+                    poll_interval = 2
+                except: pass
             
-            time.sleep(1) # Internal cycle pacing
+            time.sleep(poll_interval)
 
     def _execute(self, cmd_data):
-        """Execute a command received from the gateway."""
+        """Asynchronous Command Router (v14.0.4)."""
+        threading.Thread(target=self._execute_sync, args=(cmd_data,), daemon=True).start()
+
+    def _execute_sync(self, cmd_data):
+        """Threaded execution of commands to prevent loop freezing."""
         cmd_id  = cmd_data.get("command_id", "unknown")
         action  = cmd_data.get("action", {})
         atype   = action.get("type") or action.get("action", "")
@@ -460,8 +462,16 @@ class SovereignCore(App):
         self._report_result(cmd_id, result)
 
     def _report_result(self, cmd_id, result):
-        """Send execution result back to the Cloudflare Gateway."""
+        """Send execution result with real-time telemetry back to the Gateway."""
         try:
+            # Gather Telemetry
+            stats = {"cpu": 0, "ram": 0, "bat": 0}
+            try:
+                import psutil
+                stats["cpu"] = psutil.cpu_percent()
+                stats["ram"] = psutil.virtual_memory().percent
+            except: pass
+            
             requests.post(
                 f"{GATEWAY_URL}/agent/result",
                 headers={"Authorization": f"Bearer {API_KEY}"},
@@ -470,12 +480,13 @@ class SovereignCore(App):
                     "device_id": DEVICE_ID,
                     "success": result.get("success", False),
                     "output": result.get("output", ""),
-                    "error": result.get("error", "")
+                    "error": result.get("error", ""),
+                    "telemetry": stats
                 },
                 timeout=10
             )
         except Exception as e:
-            self._log(f"[SMC] Result delivery failed: {e}")
+            noir_log(f"[SMC] Result delivery failed: {e}", level="ERROR")
 
     def _run_shell(self, cmd, timeout=10):
         """Intelligent shell execution supporting Shizuku (rish) with diagnostic fallback."""
