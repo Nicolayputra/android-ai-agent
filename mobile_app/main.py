@@ -97,7 +97,7 @@ class SovereignCore(App):
         self.root.spacing = 5
         
         self.log_label = Label(
-            text="[b]NOIR SOVEREIGN CORE v14.0[/b]\nStatus: [color=00ff88]COMMANDER[/color]",
+            text="[b]NOIR SOVEREIGN CORE v14.0.12[/b]\nStatus: [color=00ff88]ELITE-COMMANDER[/color]",
             markup=True, font_size='14sp', halign='left', valign='top'
         )
         scroll = ScrollView()
