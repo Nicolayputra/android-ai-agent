@@ -171,10 +171,16 @@
     <div id="floating-mirror" class="mirror-window">
         <div class="mirror-header">
             <span style="font-size:0.7rem; color:var(--accent);">🔴 LIVE MIRROR</span>
-            <span onclick="toggleMirror()" style="cursor:pointer; color:#ff4444;">✖</span>
+            <div style="display:flex; gap:10px;">
+                <span onclick="syncStatus()" style="cursor:pointer; color:var(--success); font-size:0.7rem;">🔄</span>
+                <span onclick="toggleMirror()" style="cursor:pointer; color:#ff4444;">✖</span>
+            </div>
         </div>
         <div class="mirror-body">
-            <img id="mirror-stream" class="mirror-img" src="" alt="Live Stream">
+            <div id="mirror-loading" style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:5;">
+                <div class="status-badge">BUFFERING...</div>
+            </div>
+            <img id="mirror-stream" class="mirror-img" src="" alt="Live Stream" onload="document.getElementById('mirror-loading').style.display='none'">
             <div id="mirror-ts" class="mirror-status">SYNCING...</div>
         </div>
     </div>
@@ -386,22 +392,28 @@
 
                 // Process Latest Command Results into Terminal
                 if(d.commands && d.commands.length > 0) {
+                    const processedIds = JSON.parse(localStorage.getItem('noir_processed_cmds') || '[]');
                     d.commands.forEach(cmd => {
+                        if(processedIds.includes(cmd.id)) return;
+                        
                         if(cmd.status === 'done' && cmd.result) {
                             const res = JSON.parse(cmd.result);
                             const msg = `[${cmd.description}] ${res.success ? '✓' : '✗'} ${res.output || res.error || ''}`;
                             updateTerminal(msg, res.success ? '#0f8' : '#f44');
                             
-                            // Update telemetry from result if available
                             if(res.telemetry) {
                                 if(document.getElementById('s-cpu')) document.getElementById('s-cpu').innerText = `${res.telemetry.cpu}%`;
                                 if(document.getElementById('s-ram')) document.getElementById('s-ram').innerText = `${res.telemetry.ram}%`;
                                 if(document.getElementById('s-bat')) document.getElementById('s-bat').innerText = `${res.telemetry.bat || '--'}%`;
                             }
+                            processedIds.push(cmd.id);
                         } else if(cmd.status === 'failed') {
                             updateTerminal(`[${cmd.description}] CRITICAL FAILURE`, '#f00');
+                            processedIds.push(cmd.id);
                         }
                     });
+                    // Keep only last 50 processed IDs
+                    localStorage.setItem('noir_processed_cmds', JSON.stringify(processedIds.slice(-50)));
                 }
                 
                 if(currentPage === 'system') fetchLogs();
