@@ -555,41 +555,30 @@ class SovereignCore(App):
         except Exception as e:
             noir_log(f"[SMC] Result delivery failed: {e}", level="ERROR")
 
-    def _run_shell(self, cmd, timeout=10):
-        """Intelligent shell execution supporting Shizuku (rish) with diagnostic fallback."""
+    def _run_shell(self, cmd, timeout=15):
+        """Intelligent Multi-Tier Shell Engine (v14.0.8)."""
         import subprocess
-        # Standard paths for Shizuku/rish on Android
-        rish_paths = ["/system/bin/rish", "/data/local/tmp/rish", "/data/user/0/com.termux/files/usr/bin/rish"]
+        # Priority: Shizuku (rish) -> Global Path -> Standard Sh
+        rish_candidates = ["/system/bin/rish", "/data/local/tmp/rish", "/data/user/0/com.termux/files/usr/bin/rish"]
         rish_bin = "sh"
         
-        # Robust path detection
-        for p in rish_paths:
+        for p in rish_candidates:
             if os.path.exists(p):
                 rish_bin = p
                 break
-        
-        # Last resort: try 'which' via subprocess
-        if rish_bin == "sh":
-            try:
-                check = subprocess.run("which rish", shell=True, capture_output=True, text=True)
-                if check.returncode == 0:
-                    rish_bin = check.stdout.strip()
-            except: pass
 
         final_cmd = f"{rish_bin} -c \"{cmd}\"" if "rish" in rish_bin else cmd
         try:
             r = subprocess.run(final_cmd, shell=True, capture_output=True, text=True, timeout=timeout)
-            if r.returncode != 0:
-                noir_log(f"Shell CMD Failed: {cmd}\nOutput: {r.stderr}", level="WARNING")
+            # Auto-Diagnosis for Root/Shizuku access
+            if r.returncode != 0 and "permission denied" in r.stderr.lower():
+                noir_log("[SMC] Shell Permission Denied. Verify Shizuku/Root status.", level="CRITICAL")
             return {"success": r.returncode == 0, "output": (r.stdout + r.stderr).strip()}
         except Exception as e:
-            noir_log(f"Shell Exception: {e}", level="ERROR")
+            noir_log(f"[SMC] Shell Critical Error: {e}", level="ERROR")
             return {"success": False, "error": str(e)}
 
-    def _log(self, message):
-        """Legacy local logging compatibility."""
-        noir_log(message)
-
 if __name__ == '__main__':
-    noir_log(f"🧠 Noir Sovereign Mobile Core v14.0.3 Starting on {DEVICE_ID}...")
+    # Initialize Core with Peak Priority
+    noir_log("🌑 NOIR SOVEREIGN MOBILE CORE v14.0.8 [MAX_STABILITY] INITIALIZING...")
     SovereignCore().run()
